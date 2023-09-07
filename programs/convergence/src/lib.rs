@@ -29,6 +29,11 @@ pub mod convergence {
             .init_prediction_account(&ctx.bumps, prediction)?;
         ctx.accounts.update_crowd_prediction(prediction)
     }
+
+    pub fn update_prediction(ctx: Context<UpdatePrediction>, new_prediction: u16) -> Result<()> {
+        ctx.accounts.update_crowd_prediction(new_prediction)?;
+        ctx.accounts.update_user_prediction(new_prediction)
+    }
 }
 
 #[derive(Accounts)]
