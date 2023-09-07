@@ -23,9 +23,8 @@ impl Poll {
             + question.len()
             + description.len()
             + 2 * OPTION_L
-            + 2 * U64_L
+            + 3 * U64_L
             + U32_L
-            + U16_L
             + U8_L
     }
 

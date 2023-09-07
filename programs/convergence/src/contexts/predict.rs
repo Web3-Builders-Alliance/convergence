@@ -17,8 +17,8 @@ pub struct Predict<'info> {
     #[account(
       init,
       payer = forecaster,
-      seeds=[],
-      space = 10,
+      seeds=[UserPrediction::SEED_PREFIX.as_bytes(), forecaster.key().as_ref()],
+      space = UserPrediction::LEN,
       bump,
     )]
     pub user_prediction: Account<'info, UserPrediction>,
@@ -47,9 +47,10 @@ impl<'info> Predict<'info> {
                 assert!(self.poll.num_predictions > 0);
                 let cp_f = convert_to_float(crow_prediction);
                 let p_f = convert_to_float(prediction as u32);
-                let new_cp_f = cp_f + (p_f - cp_f) / self.poll.num_predictions as f32;
+                let new_cp_f = cp_f + (p_f - cp_f) / (self.poll.num_predictions + 1) as f32;
                 let new_crowd_prediction = convert_from_float(new_cp_f);
                 self.poll.crowd_prediction = Some(new_crowd_prediction);
+                self.poll.num_predictions += 1;
             }
             None => {
                 assert!(self.poll.num_predictions == 0);
