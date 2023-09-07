@@ -3,6 +3,7 @@ use anchor_lang::prelude::*;
 pub mod constants;
 pub mod contexts;
 pub mod states;
+mod utils;
 
 use contexts::*;
 
@@ -21,6 +22,12 @@ pub mod convergence {
     ) -> Result<()> {
         ctx.accounts
             .create_poll(&ctx.bumps, question, description, start_time, end_time)
+    }
+
+    pub fn predict(ctx: Context<Predict>, prediction: u16) -> Result<()> {
+        ctx.accounts
+            .init_prediction_account(&ctx.bumps, prediction)?;
+        ctx.accounts.update_crowd_prediction(prediction)
     }
 }
 
