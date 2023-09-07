@@ -27,7 +27,7 @@ describe("convergence", () => {
   const precision = 4;
 
   const question = "First question";
-  const description = "Describe when it will resolve to true";
+  const description = "Describe exactly when it will resolve to true";
   const startTime = new Date().getTime();
   const endTime = startTime + 1000 * 60 * 60 * 24 * 7;
 
@@ -37,7 +37,7 @@ describe("convergence", () => {
 
   const secondUser = Keypair.generate();
 
-  it("Prefunds payer wallet with sol and spl token", async () => {
+  it("prefunds payer wallet with sol and spl token", async () => {
     const solAmount = 10 * LAMPORTS_PER_SOL;
     await program.provider.connection
       .requestAirdrop(secondUser.publicKey, solAmount)
@@ -89,7 +89,7 @@ describe("convergence", () => {
       );
 
     await program.methods
-      .predict(prediction)
+      .makePrediction(prediction)
       .accounts({ poll: pollAddress, userPrediction: predictionAddress })
       .rpc();
 
@@ -122,7 +122,7 @@ describe("convergence", () => {
       );
 
     await program.methods
-      .predict(secondPrediction)
+      .makePrediction(secondPrediction)
       .accounts({
         forecaster: secondUser.publicKey,
         poll: pollAddress,
@@ -194,6 +194,40 @@ describe("convergence", () => {
     );
     expect(pollAccount.numPredictions.toString()).to.eq(
       "2",
+      "Wrong number of predictions."
+    );
+  });
+
+  it("updates crowd prediction when user removes own prediction!", async () => {
+    let [pollAddress, _pollBump] = anchor.web3.PublicKey.findProgramAddressSync(
+      [Buffer.from("poll"), Buffer.from(question)],
+      program.programId
+    );
+
+    let [predictionAddress, _predictionBump] =
+      anchor.web3.PublicKey.findProgramAddressSync(
+        [Buffer.from("user_prediction"), secondUser.publicKey.toBuffer()],
+        program.programId
+      );
+
+    await program.methods
+      .removePrediction()
+      .accounts({
+        forecaster: secondUser.publicKey,
+        poll: pollAddress,
+        userPrediction: predictionAddress,
+      })
+      .signers([secondUser])
+      .rpc();
+
+    const pollAccount = await program.account.poll.fetch(pollAddress);
+
+    expect(pollAccount.crowdPrediction).to.eq(
+      10 ** precision * prediction,
+      "Wrong crowd prediction."
+    );
+    expect(pollAccount.numPredictions.toString()).to.eq(
+      "1",
       "Wrong number of predictions."
     );
   });

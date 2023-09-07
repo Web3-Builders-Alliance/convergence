@@ -5,7 +5,7 @@ use crate::utils::*;
 use anchor_lang::prelude::*;
 
 #[derive(Accounts)]
-pub struct Predict<'info> {
+pub struct MakePrediction<'info> {
     #[account(mut)]
     pub forecaster: Signer<'info>,
     #[account(
@@ -25,7 +25,7 @@ pub struct Predict<'info> {
     pub system_program: Program<'info, System>,
 }
 
-impl<'info> Predict<'info> {
+impl<'info> MakePrediction<'info> {
     pub fn init_prediction_account(
         &mut self,
         bumps: &BTreeMap<String, u8>,

@@ -24,7 +24,7 @@ pub mod convergence {
             .create_poll(&ctx.bumps, question, description, start_time, end_time)
     }
 
-    pub fn predict(ctx: Context<Predict>, prediction: u16) -> Result<()> {
+    pub fn make_prediction(ctx: Context<MakePrediction>, prediction: u16) -> Result<()> {
         ctx.accounts
             .init_prediction_account(&ctx.bumps, prediction)?;
         ctx.accounts.update_crowd_prediction(prediction)
@@ -33,6 +33,10 @@ pub mod convergence {
     pub fn update_prediction(ctx: Context<UpdatePrediction>, new_prediction: u16) -> Result<()> {
         ctx.accounts.update_crowd_prediction(new_prediction)?;
         ctx.accounts.update_user_prediction(new_prediction)
+    }
+
+    pub fn remove_prediction(ctx: Context<RemovePrediction>) -> Result<()> {
+        ctx.accounts.remove_prediction()
     }
 }
 
