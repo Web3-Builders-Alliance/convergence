@@ -14,7 +14,7 @@ pub struct RemovePrediction<'info> {
     pub poll: Account<'info, Poll>,
     #[account(
       mut,
-      seeds=[UserPrediction::SEED_PREFIX.as_bytes(), forecaster.key().as_ref()],
+      seeds=[UserPrediction::SEED_PREFIX.as_bytes(), poll.key().as_ref(), forecaster.key().as_ref()],
       bump = user_prediction.bump,
       close = forecaster
     )]

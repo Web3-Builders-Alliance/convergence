@@ -84,7 +84,11 @@ describe("convergence", () => {
 
     let [predictionAddress, predictionBump] =
       anchor.web3.PublicKey.findProgramAddressSync(
-        [Buffer.from("user_prediction"), program.provider.publicKey.toBuffer()],
+        [
+          Buffer.from("user_prediction"),
+          pollAddress.toBuffer(),
+          program.provider.publicKey.toBuffer(),
+        ],
         program.programId
       );
 
@@ -124,7 +128,11 @@ describe("convergence", () => {
 
     let [predictionAddress, predictionBump] =
       anchor.web3.PublicKey.findProgramAddressSync(
-        [Buffer.from("user_prediction"), secondUser.publicKey.toBuffer()],
+        [
+          Buffer.from("user_prediction"),
+          pollAddress.toBuffer(),
+          secondUser.publicKey.toBuffer(),
+        ],
         program.programId
       );
 
@@ -172,7 +180,11 @@ describe("convergence", () => {
 
     let [predictionAddress, predictionBump] =
       anchor.web3.PublicKey.findProgramAddressSync(
-        [Buffer.from("user_prediction"), secondUser.publicKey.toBuffer()],
+        [
+          Buffer.from("user_prediction"),
+          pollAddress.toBuffer(),
+          secondUser.publicKey.toBuffer(),
+        ],
         program.programId
       );
 
@@ -221,7 +233,11 @@ describe("convergence", () => {
 
     let [predictionAddress, _predictionBump] =
       anchor.web3.PublicKey.findProgramAddressSync(
-        [Buffer.from("user_prediction"), secondUser.publicKey.toBuffer()],
+        [
+          Buffer.from("user_prediction"),
+          pollAddress.toBuffer(),
+          secondUser.publicKey.toBuffer(),
+        ],
         program.programId
       );
 
@@ -255,7 +271,11 @@ describe("convergence", () => {
 
     let [predictionAddress, _predictionBump] =
       anchor.web3.PublicKey.findProgramAddressSync(
-        [Buffer.from("user_prediction"), program.provider.publicKey.toBuffer()],
+        [
+          Buffer.from("user_prediction"),
+          pollAddress.toBuffer(),
+          program.provider.publicKey.toBuffer(),
+        ],
         program.programId
       );
 
@@ -285,7 +305,11 @@ describe("convergence", () => {
 
     let [predictionAddress, predictionBump] =
       anchor.web3.PublicKey.findProgramAddressSync(
-        [Buffer.from("user_prediction"), program.provider.publicKey.toBuffer()],
+        [
+          Buffer.from("user_prediction"),
+          pollAddress.toBuffer(),
+          program.provider.publicKey.toBuffer(),
+        ],
         program.programId
       );
 

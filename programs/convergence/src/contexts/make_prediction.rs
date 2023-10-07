@@ -17,11 +17,16 @@ pub struct MakePrediction<'info> {
     #[account(
       init,
       payer = forecaster,
-      seeds=[UserPrediction::SEED_PREFIX.as_bytes(), forecaster.key().as_ref()],
+      seeds=[UserPrediction::SEED_PREFIX.as_bytes(), poll.key().as_ref(), forecaster.key().as_ref()],
       space = UserPrediction::LEN,
       bump,
     )]
     pub user_prediction: Account<'info, UserPrediction>,
+    // #[account(
+    //     seeds=[User::SEED_PREFIX.as_bytes(), forecaster.key().as_ref()],
+    //     bump=user.bump,
+    //   )]
+    // pub user: Account<'info, User>,
     pub system_program: Program<'info, System>,
 }
 
