@@ -29,11 +29,15 @@ impl<'info> MakePrediction<'info> {
     pub fn init_prediction_account(
         &mut self,
         bumps: &BTreeMap<String, u8>,
-        prediction: u16,
+        lower_prediction: u16,
+        upper_prediction: u16,
     ) -> Result<()> {
-        assert!(prediction <= 1000);
+        assert!(lower_prediction <= 1000);
+        assert!(upper_prediction <= 1000);
+        assert!(lower_prediction <= upper_prediction);
         self.user_prediction.set_inner(UserPrediction::new(
-            prediction,
+            lower_prediction,
+            upper_prediction,
             *bumps
                 .get("user_prediction")
                 .expect("Failed to fetch bump for 'user_prediction'"),

@@ -89,7 +89,7 @@ describe("convergence", () => {
       );
 
     await program.methods
-      .makePrediction(prediction)
+      .makePrediction(prediction - 14, prediction + 14)
       .accounts({ poll: pollAddress, userPrediction: predictionAddress })
       .rpc();
 
@@ -98,7 +98,14 @@ describe("convergence", () => {
       predictionAddress
     );
 
-    expect(predictionAccount.prediction).to.eq(prediction, "Wrong prediction.");
+    expect(predictionAccount.lowerPrediction).to.eq(
+      prediction - 14,
+      "Wrong prediction."
+    );
+    expect(predictionAccount.upperPrediction).to.eq(
+      prediction + 14,
+      "Wrong prediction."
+    );
     expect(pollAccount.crowdPrediction).to.eq(
       10 ** precision * prediction,
       "Wrong crowd prediction."
@@ -122,7 +129,7 @@ describe("convergence", () => {
       );
 
     await program.methods
-      .makePrediction(secondPrediction)
+      .makePrediction(secondPrediction - 22, secondPrediction + 22)
       .accounts({
         forecaster: secondUser.publicKey,
         poll: pollAddress,
@@ -136,8 +143,12 @@ describe("convergence", () => {
       predictionAddress
     );
 
-    expect(predictionAccount.prediction).to.eq(
-      secondPrediction,
+    expect(predictionAccount.lowerPrediction).to.eq(
+      secondPrediction - 22,
+      "Wrong prediction."
+    );
+    expect(predictionAccount.upperPrediction).to.eq(
+      secondPrediction + 22,
       "Wrong prediction."
     );
     expect(predictionAccount.bump).to.eq(predictionBump, "Wrong bump.");
@@ -166,7 +177,7 @@ describe("convergence", () => {
       );
 
     await program.methods
-      .updatePrediction(updatedSecondPrediction)
+      .updatePrediction(updatedSecondPrediction, updatedSecondPrediction)
       .accounts({
         forecaster: secondUser.publicKey,
         poll: pollAddress,
@@ -180,7 +191,11 @@ describe("convergence", () => {
       predictionAddress
     );
 
-    expect(predictionAccount.prediction).to.eq(
+    expect(predictionAccount.lowerPrediction).to.eq(
+      updatedSecondPrediction,
+      "Wrong prediction."
+    );
+    expect(predictionAccount.upperPrediction).to.eq(
       updatedSecondPrediction,
       "Wrong prediction."
     );
@@ -222,6 +237,76 @@ describe("convergence", () => {
 
     const pollAccount = await program.account.poll.fetch(pollAddress);
 
+    expect(pollAccount.crowdPrediction).to.eq(
+      10 ** precision * prediction,
+      "Wrong crowd prediction."
+    );
+    expect(pollAccount.numPredictions.toString()).to.eq(
+      "1",
+      "Wrong number of predictions."
+    );
+  });
+
+  it("removes crowd prediction when every user removes own prediction!", async () => {
+    let [pollAddress, _pollBump] = anchor.web3.PublicKey.findProgramAddressSync(
+      [Buffer.from("poll"), Buffer.from(question)],
+      program.programId
+    );
+
+    let [predictionAddress, _predictionBump] =
+      anchor.web3.PublicKey.findProgramAddressSync(
+        [Buffer.from("user_prediction"), program.provider.publicKey.toBuffer()],
+        program.programId
+      );
+
+    await program.methods
+      .removePrediction()
+      .accounts({
+        forecaster: program.provider.publicKey,
+        poll: pollAddress,
+        userPrediction: predictionAddress,
+      })
+      .rpc();
+
+    const pollAccount = await program.account.poll.fetch(pollAddress);
+
+    expect(pollAccount.crowdPrediction).to.eq(null, "Wrong crowd prediction.");
+    expect(pollAccount.numPredictions.toString()).to.eq(
+      "0",
+      "Wrong number of predictions."
+    );
+  });
+
+  it("can make again a prediction after removing it!", async () => {
+    let [pollAddress, pollBump] = anchor.web3.PublicKey.findProgramAddressSync(
+      [Buffer.from("poll"), Buffer.from(question)],
+      program.programId
+    );
+
+    let [predictionAddress, predictionBump] =
+      anchor.web3.PublicKey.findProgramAddressSync(
+        [Buffer.from("user_prediction"), program.provider.publicKey.toBuffer()],
+        program.programId
+      );
+
+    await program.methods
+      .makePrediction(prediction - 25, prediction + 25)
+      .accounts({ poll: pollAddress, userPrediction: predictionAddress })
+      .rpc();
+
+    const pollAccount = await program.account.poll.fetch(pollAddress);
+    const predictionAccount = await program.account.userPrediction.fetch(
+      predictionAddress
+    );
+
+    expect(predictionAccount.lowerPrediction).to.eq(
+      prediction - 25,
+      "Wrong prediction."
+    );
+    expect(predictionAccount.upperPrediction).to.eq(
+      prediction + 25,
+      "Wrong prediction."
+    );
     expect(pollAccount.crowdPrediction).to.eq(
       10 ** precision * prediction,
       "Wrong crowd prediction."

@@ -27,7 +27,7 @@ impl<'info> UpdatePrediction<'info> {
         match self.poll.crowd_prediction {
             Some(crow_prediction) => {
                 assert!(self.poll.num_predictions > 0);
-                let old_prediction = self.user_prediction.prediction;
+                let old_prediction = self.user_prediction.get_prediction();
                 let op_f = convert_to_float(
                     10u32.pow(PREDICTION_PRECISION as u32) * old_prediction as u32,
                 );
@@ -49,8 +49,16 @@ impl<'info> UpdatePrediction<'info> {
         Ok(())
     }
 
-    pub fn update_user_prediction(&mut self, prediction: u16) -> Result<()> {
-        self.user_prediction.prediction = prediction;
+    pub fn update_user_prediction(
+        &mut self,
+        lower_prediction: u16,
+        upper_prediction: u16,
+    ) -> Result<()> {
+        assert!(lower_prediction <= 1000);
+        assert!(upper_prediction <= 1000);
+        assert!(lower_prediction <= upper_prediction);
+        self.user_prediction.lower_prediction = lower_prediction;
+        self.user_prediction.upper_prediction = upper_prediction;
         msg!("Updated user prediction");
         Ok(())
     }

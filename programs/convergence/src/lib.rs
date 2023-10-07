@@ -24,15 +24,26 @@ pub mod convergence {
             .create_poll(&ctx.bumps, question, description, start_time, end_time)
     }
 
-    pub fn make_prediction(ctx: Context<MakePrediction>, prediction: u16) -> Result<()> {
+    pub fn make_prediction(
+        ctx: Context<MakePrediction>,
+        lower_prediction: u16,
+        upper_prediction: u16,
+    ) -> Result<()> {
+        let prediction = (lower_prediction + upper_prediction) / 2;
         ctx.accounts
-            .init_prediction_account(&ctx.bumps, prediction)?;
+            .init_prediction_account(&ctx.bumps, lower_prediction, upper_prediction)?;
         ctx.accounts.update_crowd_prediction(prediction)
     }
 
-    pub fn update_prediction(ctx: Context<UpdatePrediction>, new_prediction: u16) -> Result<()> {
+    pub fn update_prediction(
+        ctx: Context<UpdatePrediction>,
+        new_lower_prediction: u16,
+        new_upper_prediction: u16,
+    ) -> Result<()> {
+        let new_prediction = (new_lower_prediction + new_upper_prediction) / 2;
         ctx.accounts.update_crowd_prediction(new_prediction)?;
-        ctx.accounts.update_user_prediction(new_prediction)
+        ctx.accounts
+            .update_user_prediction(new_lower_prediction, new_upper_prediction)
     }
 
     pub fn remove_prediction(ctx: Context<RemovePrediction>) -> Result<()> {
