@@ -11,6 +11,7 @@ pub struct Poll {
     pub end_time: Option<u64>,
     pub crowd_prediction: Option<u32>,
     pub num_predictions: u64,
+    pub accumulated_weights: f32,
     pub bump: u8,
 }
 
@@ -25,6 +26,7 @@ impl Poll {
             + 2 * OPTION_L
             + 3 * U64_L
             + U32_L
+            + F32_L
             + U8_L
     }
 
@@ -44,6 +46,7 @@ impl Poll {
             end_time,
             crowd_prediction: None,
             num_predictions: 0,
+            accumulated_weights: 0.0,
             bump,
         }
     }

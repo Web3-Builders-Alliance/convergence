@@ -34,8 +34,12 @@ pub mod convergence {
         upper_prediction: u16,
     ) -> Result<()> {
         let prediction = (lower_prediction + upper_prediction) / 2;
-        ctx.accounts
-            .init_prediction_account(&ctx.bumps, lower_prediction, upper_prediction)?;
+        ctx.accounts.init_prediction_account(
+            &ctx.bumps,
+            lower_prediction,
+            upper_prediction,
+            ctx.accounts.user.score,
+        )?;
         ctx.accounts.update_crowd_prediction(prediction)
     }
 

@@ -37,12 +37,15 @@ impl<'info> RemovePrediction<'info> {
                     );
                     let cp_f = convert_to_float(crow_prediction);
 
-                    let new_cp_f = (n * cp_f - op_f) / (n - 1.0);
+                    let new_cp_f = (self.poll.accumulated_weights * cp_f
+                        - self.user_prediction.weight * op_f)
+                        / (self.poll.accumulated_weights - self.user_prediction.weight);
                     let new_crowd_prediction = convert_from_float(new_cp_f);
                     self.poll.crowd_prediction = Some(new_crowd_prediction);
                 }
 
                 self.poll.num_predictions -= 1;
+                self.poll.accumulated_weights -= self.user_prediction.weight;
                 msg!("Updated crowd prediction");
             }
             None => {

@@ -36,7 +36,8 @@ impl<'info> UpdatePrediction<'info> {
                     10u32.pow(PREDICTION_PRECISION as u32) * new_prediction as u32,
                 );
 
-                let new_cp_f = cp_f + (np_f - op_f) / (self.poll.num_predictions as f32);
+                let new_cp_f = cp_f
+                    + self.user_prediction.weight * (np_f - op_f) / self.poll.accumulated_weights;
                 let new_crowd_prediction = convert_from_float(new_cp_f);
                 self.poll.crowd_prediction = Some(new_crowd_prediction);
 
