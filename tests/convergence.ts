@@ -49,6 +49,32 @@ describe("convergence", () => {
     expect(solBalance).to.eq(solAmount, "Wrong sol amount");
   });
 
+  it("registers user!", async () => {
+    let [user1Address, bump1] = anchor.web3.PublicKey.findProgramAddressSync(
+      [Buffer.from("user"), program.provider.publicKey.toBuffer()],
+      program.programId
+    );
+    let [user2Address, bump2] = anchor.web3.PublicKey.findProgramAddressSync(
+      [Buffer.from("user"), secondUser.publicKey.toBuffer()],
+      program.programId
+    );
+
+    await program.methods.registerUser().accounts({ user: user1Address }).rpc();
+    await program.methods
+      .registerUser()
+      .accounts({ payer: secondUser.publicKey, user: user2Address })
+      .signers([secondUser])
+      .rpc();
+
+    const user1Account = await program.account.user.fetch(user1Address);
+    const user2Account = await program.account.user.fetch(user2Address);
+
+    expect(user1Account.score).to.eq(100.0);
+    expect(user1Account.bump).to.eq(bump1);
+    expect(user2Account.score).to.eq(100.0);
+    expect(user2Account.bump).to.eq(bump2);
+  });
+
   it("creates poll!", async () => {
     let [pollAddress, bump] = anchor.web3.PublicKey.findProgramAddressSync(
       [Buffer.from("poll"), Buffer.from(question)],

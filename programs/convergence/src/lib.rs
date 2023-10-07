@@ -13,6 +13,10 @@ declare_id!("4irSQbid9JUAkhUf5yhnx5o3EgaY3saAErK9oQtPURHo");
 pub mod convergence {
     use super::*;
 
+    pub fn register_user(ctx: Context<RegisterUser>) -> Result<()> {
+        ctx.accounts.register_user(&ctx.bumps)
+    }
+
     pub fn create_poll(
         ctx: Context<CreatePoll>,
         question: String,
