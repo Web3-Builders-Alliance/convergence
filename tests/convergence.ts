@@ -97,7 +97,8 @@ describe("convergence", () => {
     expect(pollAccount.description).to.eq(description, "Wrong description");
     expect(pollAccount.startTime.toString()).to.eq(startTime.toString());
     expect(pollAccount.endTime.toString()).to.eq(endTime.toString());
-    expect(pollAccount.numPredictions.toString()).to.eq("0");
+    expect(pollAccount.numForecasters.toString()).to.eq("0");
+    expect(pollAccount.numPredictionUpdates.toString()).to.eq("0");
     expect(pollAccount.crowdPrediction).to.eq(null);
     expect(pollAccount.accumulatedWeights).to.eq(0.0);
     expect(pollAccount.bump).to.eq(bump);
@@ -139,6 +140,10 @@ describe("convergence", () => {
       predictionAddress
     );
 
+    expect(pollAccount.numPredictionUpdates.toString()).to.eq(
+      "1",
+      "Wrong number of prediction updates."
+    );
     expect(predictionAccount.lowerPrediction).to.eq(
       prediction - 14,
       "Wrong prediction."
@@ -155,7 +160,7 @@ describe("convergence", () => {
       userAccount.score,
       "Wrong accumulated weights"
     );
-    expect(pollAccount.numPredictions.toString()).to.eq(
+    expect(pollAccount.numForecasters.toString()).to.eq(
       "1",
       "Wrong number of predictions."
     );
@@ -199,6 +204,10 @@ describe("convergence", () => {
       predictionAddress
     );
 
+    expect(pollAccount.numPredictionUpdates.toString()).to.eq(
+      "2",
+      "Wrong number of prediction updates."
+    );
     expect(predictionAccount.lowerPrediction).to.eq(
       secondPrediction - 22,
       "Wrong prediction."
@@ -218,7 +227,7 @@ describe("convergence", () => {
       ),
       "Wrong crowd prediction."
     );
-    expect(pollAccount.numPredictions.toString()).to.eq(
+    expect(pollAccount.numForecasters.toString()).to.eq(
       "2",
       "Wrong number of predictions."
     );
@@ -255,6 +264,10 @@ describe("convergence", () => {
       predictionAddress
     );
 
+    expect(pollAccount.numPredictionUpdates.toString()).to.eq(
+      "3",
+      "Wrong number of prediction updates."
+    );
     expect(predictionAccount.lowerPrediction).to.eq(
       updatedSecondPrediction,
       "Wrong prediction."
@@ -271,7 +284,7 @@ describe("convergence", () => {
       ),
       "Wrong crowd prediction."
     );
-    expect(pollAccount.numPredictions.toString()).to.eq(
+    expect(pollAccount.numForecasters.toString()).to.eq(
       "2",
       "Wrong number of predictions."
     );
@@ -305,6 +318,10 @@ describe("convergence", () => {
 
     const pollAccount = await program.account.poll.fetch(pollAddress);
 
+    expect(pollAccount.numPredictionUpdates.toString()).to.eq(
+      "4",
+      "Wrong number of prediction updates."
+    );
     expect(pollAccount.crowdPrediction).to.eq(
       10 ** precision * prediction,
       "Wrong crowd prediction."
@@ -313,7 +330,7 @@ describe("convergence", () => {
       100.0,
       "Wrong accumulated weigths."
     );
-    expect(pollAccount.numPredictions.toString()).to.eq(
+    expect(pollAccount.numForecasters.toString()).to.eq(
       "1",
       "Wrong number of predictions."
     );
@@ -346,12 +363,16 @@ describe("convergence", () => {
 
     const pollAccount = await program.account.poll.fetch(pollAddress);
 
+    expect(pollAccount.numPredictionUpdates.toString()).to.eq(
+      "5",
+      "Wrong number of prediction updates."
+    );
     expect(pollAccount.crowdPrediction).to.eq(null, "Wrong crowd prediction.");
     expect(pollAccount.accumulatedWeights).to.eq(
       0.0,
       "Wrong accumulated weigths."
     );
-    expect(pollAccount.numPredictions.toString()).to.eq(
+    expect(pollAccount.numForecasters.toString()).to.eq(
       "0",
       "Wrong number of predictions."
     );
@@ -368,7 +389,7 @@ describe("convergence", () => {
       program.programId
     );
 
-    let [predictionAddress, predictionBump] =
+    let [predictionAddress, _predictionBump] =
       anchor.web3.PublicKey.findProgramAddressSync(
         [
           Buffer.from("user_prediction"),
@@ -392,6 +413,10 @@ describe("convergence", () => {
       predictionAddress
     );
 
+    expect(pollAccount.numPredictionUpdates.toString()).to.eq(
+      "6",
+      "Wrong number of prediction updates."
+    );
     expect(pollAccount.accumulatedWeights).to.eq(
       100.0,
       "Wrong accumulated weigths."
@@ -408,7 +433,7 @@ describe("convergence", () => {
       10 ** precision * prediction,
       "Wrong crowd prediction."
     );
-    expect(pollAccount.numPredictions.toString()).to.eq(
+    expect(pollAccount.numForecasters.toString()).to.eq(
       "1",
       "Wrong number of predictions."
     );

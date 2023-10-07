@@ -10,7 +10,8 @@ pub struct Poll {
     pub start_time: u64,
     pub end_time: Option<u64>,
     pub crowd_prediction: Option<u32>,
-    pub num_predictions: u64,
+    pub num_forecasters: u64,
+    pub num_prediction_updates: u64,
     pub accumulated_weights: f32,
     pub bump: u8,
 }
@@ -24,7 +25,7 @@ impl Poll {
             + question.len()
             + description.len()
             + 2 * OPTION_L
-            + 3 * U64_L
+            + 4 * U64_L
             + U32_L
             + F32_L
             + U8_L
@@ -45,7 +46,8 @@ impl Poll {
             start_time,
             end_time,
             crowd_prediction: None,
-            num_predictions: 0,
+            num_forecasters: 0,
+            num_prediction_updates: 0,
             accumulated_weights: 0.0,
             bump,
         }

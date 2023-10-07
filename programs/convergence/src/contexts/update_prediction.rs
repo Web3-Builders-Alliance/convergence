@@ -26,7 +26,10 @@ impl<'info> UpdatePrediction<'info> {
         assert!(new_prediction <= 1000);
         match self.poll.crowd_prediction {
             Some(crow_prediction) => {
-                assert!(self.poll.num_predictions > 0);
+                assert!(self.poll.num_forecasters > 0);
+                assert!(self.poll.num_prediction_updates > 0);
+                self.poll.num_prediction_updates += 1;
+
                 let old_prediction = self.user_prediction.get_prediction();
                 let op_f = convert_to_float(
                     10u32.pow(PREDICTION_PRECISION as u32) * old_prediction as u32,

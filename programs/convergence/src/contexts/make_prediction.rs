@@ -57,8 +57,10 @@ impl<'info> MakePrediction<'info> {
         assert!(prediction <= 1000);
         match self.poll.crowd_prediction {
             Some(crow_prediction) => {
-                assert!(self.poll.num_predictions > 0);
-                self.poll.num_predictions += 1;
+                assert!(self.poll.num_forecasters > 0);
+                assert!(self.poll.num_prediction_updates > 0);
+                self.poll.num_forecasters += 1;
+                self.poll.num_prediction_updates += 1;
                 self.poll.accumulated_weights += self.user_prediction.weight;
 
                 let cp_f = convert_to_float(crow_prediction);
@@ -72,12 +74,13 @@ impl<'info> MakePrediction<'info> {
                 msg!("Updated crowd prediction");
             }
             None => {
-                assert!(self.poll.num_predictions == 0);
+                assert!(self.poll.num_forecasters == 0);
                 assert!(self.poll.accumulated_weights == 0.0);
                 self.poll.crowd_prediction =
                     Some(10u32.pow(PREDICTION_PRECISION as u32) * prediction as u32);
-                self.poll.num_predictions = 1;
+                self.poll.num_forecasters = 1;
                 self.poll.accumulated_weights = self.user_prediction.weight;
+                self.poll.num_prediction_updates += 1;
             }
         }
         Ok(())

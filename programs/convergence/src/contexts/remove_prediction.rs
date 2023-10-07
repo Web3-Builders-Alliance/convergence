@@ -26,10 +26,14 @@ impl<'info> RemovePrediction<'info> {
     pub fn remove_prediction(&mut self) -> Result<()> {
         match self.poll.crowd_prediction {
             Some(crow_prediction) => {
-                if self.poll.num_predictions == 1 {
+                assert!(self.poll.num_forecasters > 0);
+                assert!(self.poll.num_prediction_updates > 0);
+                self.poll.num_prediction_updates += 1;
+
+                if self.poll.num_forecasters == 1 {
                     self.poll.crowd_prediction = None;
                 } else {
-                    let n = self.poll.num_predictions as f32;
+                    let n = self.poll.num_forecasters as f32;
                     assert!(n > 0.0);
                     let old_prediction = self.user_prediction.get_prediction();
                     let op_f = convert_to_float(
@@ -44,7 +48,7 @@ impl<'info> RemovePrediction<'info> {
                     self.poll.crowd_prediction = Some(new_crowd_prediction);
                 }
 
-                self.poll.num_predictions -= 1;
+                self.poll.num_forecasters -= 1;
                 self.poll.accumulated_weights -= self.user_prediction.weight;
                 msg!("Updated crowd prediction");
             }
