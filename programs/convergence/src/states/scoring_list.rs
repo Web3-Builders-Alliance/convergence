@@ -13,11 +13,11 @@ pub struct ScoringList {
 impl ScoringList {
     pub const SEED_PREFIX: &'static str = "scoring_list";
 
-    pub const LEN: usize = 8 + 4 + 1001 * I64_L + 4 + 1001 * F32_L + U64_L + U8_L;
+    pub const LEN: usize = 8 + 4 + 101 * I64_L + 4 + 101 * F32_L + U64_L + U8_L;
 
     pub fn new(bump: u8) -> Self {
         Self {
-            option: vec![0; 1001],
+            option: vec![0; 101],
             cost: vec![],
             last_slot: 0,
             bump,
@@ -26,6 +26,6 @@ impl ScoringList {
 
     pub fn initialize_scoring_list(&mut self, last_slot: u64) {
         self.last_slot = last_slot;
-        self.cost = vec![0.0; 1001];
+        self.cost = vec![0.0; 101];
     }
 }

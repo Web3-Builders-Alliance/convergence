@@ -38,7 +38,7 @@ impl<'info> UpdatePrediction<'info> {
         new_prediction: u16,
         new_uncertainty: f32,
     ) -> Result<()> {
-        assert!(new_prediction <= 1000);
+        assert!(new_prediction <= 100);
         match self.poll.crowd_prediction {
             Some(crow_prediction) => {
                 assert!(self.poll.num_forecasters > 0);
@@ -50,7 +50,7 @@ impl<'info> UpdatePrediction<'info> {
                 let old_uncertainty = (self.user_prediction.upper_prediction
                     - self.user_prediction.lower_prediction)
                     as f32
-                    / 1000.0;
+                    / 100.0;
                 let op_f = convert_to_float(
                     10u32.pow(PREDICTION_PRECISION as u32) * old_prediction as u32,
                 );
@@ -94,8 +94,8 @@ impl<'info> UpdatePrediction<'info> {
         lower_prediction: u16,
         upper_prediction: u16,
     ) -> Result<()> {
-        assert!(lower_prediction <= 1000);
-        assert!(upper_prediction <= 1000);
+        assert!(lower_prediction <= 100);
+        assert!(upper_prediction <= 100);
         assert!(lower_prediction <= upper_prediction);
         self.user_prediction.lower_prediction = lower_prediction;
         self.user_prediction.upper_prediction = upper_prediction;

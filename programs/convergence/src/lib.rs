@@ -37,7 +37,7 @@ pub mod convergence {
         upper_prediction: u16,
     ) -> Result<()> {
         let prediction = (lower_prediction + upper_prediction) / 2;
-        let uncertainty = (upper_prediction - lower_prediction) as f32 / 1000.0;
+        let uncertainty = (upper_prediction - lower_prediction) as f32 / 100.0;
         ctx.accounts.init_prediction_account(
             &ctx.bumps,
             lower_prediction,
@@ -54,7 +54,7 @@ pub mod convergence {
         new_upper_prediction: u16,
     ) -> Result<()> {
         let new_prediction = (new_lower_prediction + new_upper_prediction) / 2;
-        let new_uncertainty = (new_upper_prediction - new_lower_prediction) as f32 / 1000.0;
+        let new_uncertainty = (new_upper_prediction - new_lower_prediction) as f32 / 100.0;
         ctx.accounts
             .update_crowd_prediction(&ctx.bumps, new_prediction, new_uncertainty)?;
         ctx.accounts

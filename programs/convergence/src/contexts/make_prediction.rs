@@ -52,8 +52,8 @@ impl<'info> MakePrediction<'info> {
         upper_prediction: u16,
         weight: f32,
     ) -> Result<()> {
-        assert!(lower_prediction <= 1000);
-        assert!(upper_prediction <= 1000);
+        assert!(lower_prediction <= 100);
+        assert!(upper_prediction <= 100);
         assert!(lower_prediction <= upper_prediction);
 
         self.user_prediction.set_inner(UserPrediction::new(
@@ -74,7 +74,7 @@ impl<'info> MakePrediction<'info> {
         prediction: u16,
         uncertainty: f32,
     ) -> Result<()> {
-        assert!(prediction <= 1000);
+        assert!(prediction <= 100);
         match self.poll.crowd_prediction {
             Some(crow_prediction) => {
                 assert!(self.poll.num_forecasters > 0);
@@ -95,7 +95,7 @@ impl<'info> MakePrediction<'info> {
 
                 let current_slot = Clock::get().unwrap().slot;
 
-                // self.scoring_list.last_slot = current_slot;
+                self.scoring_list.last_slot = current_slot;
                 msg!("Updated crowd prediction");
             }
             None => {
@@ -107,7 +107,7 @@ impl<'info> MakePrediction<'info> {
                 self.poll.accumulated_weights = (1.0 - uncertainty) * self.user_prediction.weight;
                 self.poll.num_prediction_updates += 1;
 
-                // self.scoring_list.last_slot = Clock::get().unwrap().slot;
+                self.scoring_list.last_slot = Clock::get().unwrap().slot;
             }
         }
 

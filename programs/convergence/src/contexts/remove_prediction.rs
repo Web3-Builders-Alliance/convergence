@@ -44,7 +44,7 @@ impl<'info> RemovePrediction<'info> {
                 let old_uncertainty = (self.user_prediction.upper_prediction
                     - self.user_prediction.lower_prediction)
                     as f32
-                    / 1000.0;
+                    / 100.0;
 
                 if self.poll.num_forecasters == 1 {
                     self.poll.crowd_prediction = None;
