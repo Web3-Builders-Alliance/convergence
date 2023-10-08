@@ -185,6 +185,18 @@ describe("convergence", () => {
         program.programId
       );
 
+    let [userScoreAddress, userScoreBump] =
+      anchor.web3.PublicKey.findProgramAddressSync(
+        [
+          Buffer.from("user_score"),
+          pollAddress.toBuffer(),
+          program.provider.publicKey.toBuffer(),
+        ],
+        program.programId
+      );
+
+    // console.log("User score making", pollAddress);
+
     await program.methods
       .makePrediction(prediction - uncertainty1, prediction + uncertainty1)
       .accounts({
@@ -193,6 +205,7 @@ describe("convergence", () => {
         userPrediction: userPredictionAddress,
         predictionUpdate: predictionUpdateAddress,
         scoringList: scoringListAddress,
+        userScore: userScoreAddress,
       })
       .rpc();
 
@@ -287,6 +300,16 @@ describe("convergence", () => {
         program.programId
       );
 
+    let [userScoreAddress, userScoreBump] =
+      anchor.web3.PublicKey.findProgramAddressSync(
+        [
+          Buffer.from("user_score"),
+          pollAddress.toBuffer(),
+          secondUser.publicKey.toBuffer(),
+        ],
+        program.programId
+      );
+
     await program.methods
       .makePrediction(
         secondPrediction - uncertainty2,
@@ -299,6 +322,7 @@ describe("convergence", () => {
         userPrediction: predictionAddress,
         predictionUpdate: predictionUpdateAddress,
         scoringList: scoringListAddress,
+        userScore: userScoreAddress,
       })
       .signers([secondUser])
       .rpc();
@@ -416,6 +440,16 @@ describe("convergence", () => {
         program.programId
       );
 
+    let [userScoreAddress, _userScoreBump] =
+      anchor.web3.PublicKey.findProgramAddressSync(
+        [
+          Buffer.from("user_score"),
+          pollAddress.toBuffer(),
+          secondUser.publicKey.toBuffer(),
+        ],
+        program.programId
+      );
+
     await program.methods
       .updatePrediction(updatedSecondPrediction, updatedSecondPrediction)
       .accounts({
@@ -424,6 +458,7 @@ describe("convergence", () => {
         userPrediction: predictionAddress,
         predictionUpdate: predictionUpdateAddress,
         scoringList: scoringListAddress,
+        userScore: userScoreAddress,
       })
       .signers([secondUser])
       .rpc();
@@ -512,6 +547,16 @@ describe("convergence", () => {
         program.programId
       );
 
+    let [userScoreAddress, _userScoreBump] =
+      anchor.web3.PublicKey.findProgramAddressSync(
+        [
+          Buffer.from("user_score"),
+          pollAddress.toBuffer(),
+          secondUser.publicKey.toBuffer(),
+        ],
+        program.programId
+      );
+
     await program.methods
       .removePrediction()
       .accounts({
@@ -520,6 +565,7 @@ describe("convergence", () => {
         userPrediction: predictionAddress,
         predictionUpdate: predictionUpdateAddress,
         scoringList: scoringListAddress,
+        userScore: userScoreAddress,
       })
       .signers([secondUser])
       .rpc();
@@ -590,6 +636,16 @@ describe("convergence", () => {
         program.programId
       );
 
+    let [userScoreAddress, _userScoreBump] =
+      anchor.web3.PublicKey.findProgramAddressSync(
+        [
+          Buffer.from("user_score"),
+          pollAddress.toBuffer(),
+          program.provider.publicKey.toBuffer(),
+        ],
+        program.programId
+      );
+
     await program.methods
       .removePrediction()
       .accounts({
@@ -598,6 +654,7 @@ describe("convergence", () => {
         userPrediction: predictionAddress,
         predictionUpdate: predictionUpdateAddress,
         scoringList: scoringListAddress,
+        userScore: userScoreAddress,
       })
       .rpc();
 
@@ -609,7 +666,7 @@ describe("convergence", () => {
       scoringListAddress
     );
 
-    console.log("Scoring", scoringAccount);
+    // console.log("Scoring", scoringAccount);
 
     expect(pollAccount.numPredictionUpdates.toString()).to.eq(
       "5",
@@ -669,6 +726,17 @@ describe("convergence", () => {
         program.programId
       );
 
+    let [userScoreAddress, userScoreBump] =
+      anchor.web3.PublicKey.findProgramAddressSync(
+        [
+          Buffer.from("user_score"),
+          pollAddress.toBuffer(),
+          program.provider.publicKey.toBuffer(),
+        ],
+        program.programId
+      );
+    // console.log("User score making again", pollAddress);
+
     await program.methods
       .makePrediction(prediction - uncertainty2, prediction + uncertainty2)
       .accounts({
@@ -677,6 +745,7 @@ describe("convergence", () => {
         userPrediction: predictionAddress,
         predictionUpdate: predictionUpdateAddress,
         scoringList: scoringListAddress,
+        userScore: userScoreAddress,
       })
       .rpc();
 
@@ -691,7 +760,7 @@ describe("convergence", () => {
       scoringListAddress
     );
 
-    console.log("Scoring", scoringAccount);
+    // console.log("Scoring", scoringAccount);
 
     expect(pollAccount.numPredictionUpdates.toString()).to.eq(
       "6",

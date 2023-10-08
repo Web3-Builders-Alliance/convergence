@@ -1,5 +1,6 @@
 use std::collections::BTreeMap;
 
+use crate::constants::EPSILON;
 use crate::states::*;
 use crate::utils::*;
 use anchor_lang::prelude::*;
@@ -34,6 +35,12 @@ pub struct UpdatePrediction<'info> {
         bump=scoring_list.bump
     )]
     pub scoring_list: Box<Account<'info, ScoringList>>,
+    #[account(
+        mut,
+        seeds=[UserScore::SEED_PREFIX.as_bytes(), poll.key().as_ref(), forecaster.key().as_ref()],
+        bump=user_score.bump,
+      )]
+    pub user_score: Account<'info, UserScore>,
     pub system_program: Program<'info, System>,
 }
 
@@ -52,6 +59,7 @@ impl<'info> UpdatePrediction<'info> {
                 assert!(self.poll.accumulated_weights > 0.0);
                 self.poll.num_prediction_updates += 1;
 
+                // update crowd prediction
                 let old_prediction = self.user_prediction.get_prediction();
                 let old_uncertainty = (self.user_prediction.upper_prediction
                     - self.user_prediction.lower_prediction)
@@ -76,8 +84,9 @@ impl<'info> UpdatePrediction<'info> {
                 self.poll.accumulated_weights +=
                     (old_uncertainty - new_uncertainty) * self.user_prediction.weight;
 
+                // Update score list
                 let current_slot = Clock::get().unwrap().slot;
-                let last_slot = self.scoring_list.last_slot;
+                let last_scoring_list_slot = self.scoring_list.last_slot;
 
                 for num in self
                     .scoring_list
@@ -85,7 +94,7 @@ impl<'info> UpdatePrediction<'info> {
                     .iter_mut()
                     .take(((cp_f * 100.0).round() / 100.0).ceil() as usize)
                 {
-                    *num -= (current_slot - last_slot) as i64;
+                    *num -= (current_slot - last_scoring_list_slot) as i64;
                 }
 
                 for cost in self
@@ -94,7 +103,7 @@ impl<'info> UpdatePrediction<'info> {
                     .iter_mut()
                     .take(((cp_f * 100.0).round() / 100.0).ceil() as usize)
                 {
-                    *cost -= (current_slot - last_slot) as f32 * cp_f / 100.0;
+                    *cost -= (current_slot - last_scoring_list_slot) as f32 * cp_f / 100.0;
                 }
 
                 for num in self
@@ -103,7 +112,7 @@ impl<'info> UpdatePrediction<'info> {
                     .iter_mut()
                     .skip(1 + ((cp_f * 100.0).round() / 100.0).floor() as usize)
                 {
-                    *num += (current_slot - last_slot) as i64;
+                    *num += (current_slot - last_scoring_list_slot) as i64;
                 }
 
                 for cost in self
@@ -112,10 +121,49 @@ impl<'info> UpdatePrediction<'info> {
                     .iter_mut()
                     .skip(1 + ((cp_f * 100.0).round() / 100.0).floor() as usize)
                 {
-                    *cost += (current_slot - last_slot) as f32 * cp_f / 100.0;
+                    *cost += (current_slot - last_scoring_list_slot) as f32 * cp_f / 100.0;
                 }
 
                 self.scoring_list.last_slot = current_slot;
+
+                // Update user score
+                let last_user_score_slot = self.user_score.last_slot;
+                self.user_score.ln_a += (current_slot - last_user_score_slot) as f32
+                    * (1.0 - old_uncertainty)
+                    * (op_f / 100.0 + EPSILON).ln()
+                    + 2.0f32.ln();
+
+                self.user_score.ln_b += (current_slot - last_user_score_slot) as f32
+                    * (1.0 - old_uncertainty)
+                    * (1.0 - op_f / 100.0 + EPSILON).ln()
+                    + 2.0f32.ln();
+
+                let add_option = (self.scoring_list.options
+                    [self.user_prediction.upper_prediction as usize]
+                    - self.user_score.last_upper_option
+                    + self.scoring_list.options[self.user_prediction.lower_prediction as usize]
+                    - self.user_score.last_lower_option)
+                    / 2;
+
+                let add_cost = (self.scoring_list.cost
+                    [self.user_prediction.upper_prediction as usize]
+                    - self.user_score.last_upper_cost
+                    + self.scoring_list.cost[self.user_prediction.lower_prediction as usize]
+                    - self.user_score.last_lower_cost)
+                    / 2.0;
+
+                self.user_score.last_lower_option =
+                    self.scoring_list.options[self.user_prediction.lower_prediction as usize];
+                self.user_score.last_upper_option =
+                    self.scoring_list.options[self.user_prediction.upper_prediction as usize];
+                self.user_score.last_lower_cost =
+                    self.scoring_list.cost[self.user_prediction.lower_prediction as usize];
+                self.user_score.last_upper_cost =
+                    self.scoring_list.cost[self.user_prediction.upper_prediction as usize];
+
+                self.user_score.options += add_option;
+                self.user_score.cost += add_cost;
+                self.user_score.last_slot = current_slot;
 
                 msg!("Updated crowd prediction");
             }

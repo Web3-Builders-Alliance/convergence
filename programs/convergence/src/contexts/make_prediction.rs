@@ -41,6 +41,14 @@ pub struct MakePrediction<'info> {
         bump=scoring_list.bump
     )]
     pub scoring_list: Box<Account<'info, ScoringList>>,
+    #[account(
+        init,
+        payer = forecaster,
+        seeds=[UserScore::SEED_PREFIX.as_bytes(), poll.key().as_ref(), forecaster.key().as_ref()],
+        space = UserScore::LEN,
+        bump,
+      )]
+    pub user_score: Account<'info, UserScore>,
     pub system_program: Program<'info, System>,
 }
 
@@ -64,6 +72,7 @@ impl<'info> MakePrediction<'info> {
                 .get("user_prediction")
                 .expect("Failed to fetch bump for 'user_prediction'"),
         ));
+
         msg!("Created user prediction");
         Ok(())
     }
@@ -133,6 +142,7 @@ impl<'info> MakePrediction<'info> {
                 }
 
                 self.scoring_list.last_slot = current_slot;
+
                 msg!("Updated crowd prediction");
             }
             None => {
@@ -147,6 +157,25 @@ impl<'info> MakePrediction<'info> {
                 self.scoring_list.last_slot = Clock::get().unwrap().slot;
             }
         }
+
+        let last_lower_option =
+            self.scoring_list.options[self.user_prediction.lower_prediction as usize];
+        let last_upper_option =
+            self.scoring_list.options[self.user_prediction.upper_prediction as usize];
+        let last_lower_cost =
+            self.scoring_list.cost[self.user_prediction.lower_prediction as usize];
+        let last_upper_cost =
+            self.scoring_list.cost[self.user_prediction.upper_prediction as usize];
+
+        self.user_score.set_inner(UserScore::new(
+            last_lower_option,
+            last_upper_option,
+            last_lower_cost,
+            last_upper_cost,
+            *bumps
+                .get("user_score")
+                .expect("Failed to fetch bump for 'user_score'"),
+        ));
 
         self.prediction_update.set_inner(PredictionUpdate::new(
             self.poll.crowd_prediction,

@@ -35,6 +35,13 @@ pub struct RemovePrediction<'info> {
         bump=scoring_list.bump
     )]
     pub scoring_list: Box<Account<'info, ScoringList>>,
+    #[account(
+        mut,
+        seeds=[UserScore::SEED_PREFIX.as_bytes(), poll.key().as_ref(), forecaster.key().as_ref()],
+        bump = user_score.bump,
+        close = forecaster
+      )]
+    pub user_score: Account<'info, UserScore>,
     pub system_program: Program<'info, System>,
 }
 

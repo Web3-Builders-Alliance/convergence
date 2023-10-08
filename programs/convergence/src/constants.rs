@@ -8,3 +8,5 @@ pub const BOOL_L: usize = 1;
 pub const PUBKEY_L: usize = 32;
 pub const OPTION_L: usize = 1;
 pub const STRING_L: usize = 4;
+
+pub const EPSILON: f32 = 0.0001;
