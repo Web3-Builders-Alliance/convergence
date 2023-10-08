@@ -79,12 +79,17 @@ impl<'info> RemovePrediction<'info> {
                     .scoring_list
                     .options
                     .iter_mut()
-                    .take(cp_f.ceil() as usize)
+                    .take(((cp_f * 100.0).round() / 100.0).ceil() as usize)
                 {
                     *num -= (current_slot - last_slot) as i64;
                 }
 
-                for cost in self.scoring_list.cost.iter_mut().take(cp_f.ceil() as usize) {
+                for cost in self
+                    .scoring_list
+                    .cost
+                    .iter_mut()
+                    .take(((cp_f * 100.0).round() / 100.0).ceil() as usize)
+                {
                     *cost -= (current_slot - last_slot) as f32 * cp_f / 100.0;
                 }
 
@@ -92,7 +97,7 @@ impl<'info> RemovePrediction<'info> {
                     .scoring_list
                     .options
                     .iter_mut()
-                    .skip(1 + cp_f.floor() as usize)
+                    .skip(1 + ((cp_f * 100.0).round() / 100.0).floor() as usize)
                 {
                     *num += (current_slot - last_slot) as i64;
                 }
@@ -101,7 +106,7 @@ impl<'info> RemovePrediction<'info> {
                     .scoring_list
                     .cost
                     .iter_mut()
-                    .skip(1 + cp_f.floor() as usize)
+                    .skip(1 + ((cp_f * 100.0).round() / 100.0).floor() as usize)
                 {
                     *cost += (current_slot - last_slot) as f32 * cp_f / 100.0;
                 }
