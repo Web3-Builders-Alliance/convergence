@@ -35,8 +35,8 @@ describe("convergence", () => {
   const secondPrediction = 10;
   const updatedSecondPrediction = 50;
 
-  const uncertainty1 = 5;
-  const uncertainty2 = 2;
+  const uncertainty1 = 0;
+  const uncertainty2 = 0;
 
   const secondUser = Keypair.generate();
 
@@ -605,6 +605,11 @@ describe("convergence", () => {
     let updateAccount = await program.account.predictionUpdate.fetch(
       predictionUpdateAddress
     );
+    const scoringAccount = await program.account.scoringList.fetch(
+      scoringListAddress
+    );
+
+    console.log("Scoring", scoringAccount);
 
     expect(pollAccount.numPredictionUpdates.toString()).to.eq(
       "5",
@@ -682,6 +687,11 @@ describe("convergence", () => {
     const updateAccount = await program.account.predictionUpdate.fetch(
       predictionUpdateAddress
     );
+    const scoringAccount = await program.account.scoringList.fetch(
+      scoringListAddress
+    );
+
+    console.log("Scoring", scoringAccount);
 
     expect(pollAccount.numPredictionUpdates.toString()).to.eq(
       "6",
