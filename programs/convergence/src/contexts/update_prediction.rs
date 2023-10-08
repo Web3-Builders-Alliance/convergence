@@ -28,6 +28,12 @@ pub struct UpdatePrediction<'info> {
         bump,
     )]
     pub prediction_update: Account<'info, PredictionUpdate>,
+    #[account(
+        mut,
+        seeds=[ScoringList::SEED_PREFIX.as_bytes(), poll.key().as_ref()],
+        bump=scoring_list.bump
+    )]
+    pub scoring_list: Box<Account<'info, ScoringList>>,
     pub system_program: Program<'info, System>,
 }
 
@@ -65,12 +71,46 @@ impl<'info> UpdatePrediction<'info> {
                     / (self.poll.accumulated_weights
                         + (old_uncertainty - new_uncertainty) * self.user_prediction.weight);
 
-                // let new_cp_f = cp_f
-                //     + self.user_prediction.weight * (np_f - op_f) / self.poll.accumulated_weights;
                 let new_crowd_prediction = convert_from_float(new_cp_f);
                 self.poll.crowd_prediction = Some(new_crowd_prediction);
                 self.poll.accumulated_weights +=
                     (old_uncertainty - new_uncertainty) * self.user_prediction.weight;
+
+                let current_slot = Clock::get().unwrap().slot;
+                let last_slot = self.scoring_list.last_slot;
+
+                for num in self
+                    .scoring_list
+                    .options
+                    .iter_mut()
+                    .take(cp_f.ceil() as usize)
+                {
+                    *num -= (current_slot - last_slot) as i64;
+                }
+
+                for cost in self.scoring_list.cost.iter_mut().take(cp_f.ceil() as usize) {
+                    *cost -= (current_slot - last_slot) as f32 * cp_f / 100.0;
+                }
+
+                for num in self
+                    .scoring_list
+                    .options
+                    .iter_mut()
+                    .skip(1 + cp_f.floor() as usize)
+                {
+                    *num += (current_slot - last_slot) as i64;
+                }
+
+                for cost in self
+                    .scoring_list
+                    .cost
+                    .iter_mut()
+                    .skip(1 + cp_f.floor() as usize)
+                {
+                    *cost += (current_slot - last_slot) as f32 * cp_f / 100.0;
+                }
+
+                self.scoring_list.last_slot = current_slot;
 
                 msg!("Updated crowd prediction");
             }

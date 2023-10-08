@@ -40,7 +40,7 @@ describe("convergence", () => {
 
   const secondUser = Keypair.generate();
 
-  it("prefunds payer wallet with sol and spl token", async () => {
+  it("pre-funds payer wallet with sol and spl token", async () => {
     const solAmount = 100 * LAMPORTS_PER_SOL;
     await program.provider.connection
       .requestAirdrop(secondUser.publicKey, solAmount)
@@ -410,6 +410,12 @@ describe("convergence", () => {
         program.programId
       );
 
+    let [scoringListAddress, _scoringBump] =
+      anchor.web3.PublicKey.findProgramAddressSync(
+        [Buffer.from("scoring_list"), pollAddress.toBuffer()],
+        program.programId
+      );
+
     await program.methods
       .updatePrediction(updatedSecondPrediction, updatedSecondPrediction)
       .accounts({
@@ -417,6 +423,7 @@ describe("convergence", () => {
         poll: pollAddress,
         userPrediction: predictionAddress,
         predictionUpdate: predictionUpdateAddress,
+        scoringList: scoringListAddress,
       })
       .signers([secondUser])
       .rpc();
@@ -499,6 +506,12 @@ describe("convergence", () => {
         program.programId
       );
 
+    let [scoringListAddress, _scoringBump] =
+      anchor.web3.PublicKey.findProgramAddressSync(
+        [Buffer.from("scoring_list"), pollAddress.toBuffer()],
+        program.programId
+      );
+
     await program.methods
       .removePrediction()
       .accounts({
@@ -506,6 +519,7 @@ describe("convergence", () => {
         poll: pollAddress,
         userPrediction: predictionAddress,
         predictionUpdate: predictionUpdateAddress,
+        scoringList: scoringListAddress,
       })
       .signers([secondUser])
       .rpc();
@@ -526,7 +540,7 @@ describe("convergence", () => {
     );
     expect(pollAccount.accumulatedWeights).to.eq(
       (1 - (2 * uncertainty1) / 100) * 100.0,
-      "Wrong accumulated weigths."
+      "Wrong accumulated weights."
     );
     expect(pollAccount.numForecasters.toString()).to.eq(
       "1",
@@ -570,6 +584,12 @@ describe("convergence", () => {
         program.programId
       );
 
+    let [scoringListAddress, _scoringBump] =
+      anchor.web3.PublicKey.findProgramAddressSync(
+        [Buffer.from("scoring_list"), pollAddress.toBuffer()],
+        program.programId
+      );
+
     await program.methods
       .removePrediction()
       .accounts({
@@ -577,6 +597,7 @@ describe("convergence", () => {
         poll: pollAddress,
         userPrediction: predictionAddress,
         predictionUpdate: predictionUpdateAddress,
+        scoringList: scoringListAddress,
       })
       .rpc();
 
@@ -592,7 +613,7 @@ describe("convergence", () => {
     expect(pollAccount.crowdPrediction).to.eq(null, "Wrong crowd prediction.");
     expect(pollAccount.accumulatedWeights).to.eq(
       0.0,
-      "Wrong accumulated weigths."
+      "Wrong accumulated weights."
     );
     expect(pollAccount.numForecasters.toString()).to.eq(
       "0",
@@ -668,7 +689,7 @@ describe("convergence", () => {
     );
     expect(pollAccount.accumulatedWeights).to.eq(
       (1 - (2 * uncertainty2) / 100) * 100.0,
-      "Wrong accumulated weigths."
+      "Wrong accumulated weights."
     );
     expect(predictionAccount.lowerPrediction).to.eq(
       prediction - uncertainty2,
