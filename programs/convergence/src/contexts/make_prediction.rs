@@ -66,21 +66,24 @@ impl<'info> MakePrediction<'info> {
         &mut self,
         bumps: &BTreeMap<String, u8>,
         prediction: u16,
+        uncertainty: f32,
     ) -> Result<()> {
         assert!(prediction <= 1000);
         match self.poll.crowd_prediction {
             Some(crow_prediction) => {
                 assert!(self.poll.num_forecasters > 0);
                 assert!(self.poll.num_prediction_updates > 0);
+                assert!(self.poll.accumulated_weights > 0.0);
                 self.poll.num_forecasters += 1;
                 self.poll.num_prediction_updates += 1;
-                self.poll.accumulated_weights += self.user_prediction.weight;
+                self.poll.accumulated_weights += (1.0 - uncertainty) * self.user_prediction.weight;
 
                 let cp_f = convert_to_float(crow_prediction);
                 let p_f =
                     convert_to_float(10u32.pow(PREDICTION_PRECISION as u32) * prediction as u32);
                 let new_cp_f = cp_f
-                    + self.user_prediction.weight * (p_f - cp_f) / self.poll.accumulated_weights;
+                    + (1.0 - uncertainty) * self.user_prediction.weight * (p_f - cp_f)
+                        / self.poll.accumulated_weights;
                 let new_crowd_prediction = convert_from_float(new_cp_f);
                 self.poll.crowd_prediction = Some(new_crowd_prediction);
 
@@ -92,7 +95,7 @@ impl<'info> MakePrediction<'info> {
                 self.poll.crowd_prediction =
                     Some(10u32.pow(PREDICTION_PRECISION as u32) * prediction as u32);
                 self.poll.num_forecasters = 1;
-                self.poll.accumulated_weights = self.user_prediction.weight;
+                self.poll.accumulated_weights = (1.0 - uncertainty) * self.user_prediction.weight;
                 self.poll.num_prediction_updates += 1;
             }
         }

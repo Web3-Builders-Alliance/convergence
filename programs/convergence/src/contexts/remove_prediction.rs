@@ -35,31 +35,36 @@ pub struct RemovePrediction<'info> {
 impl<'info> RemovePrediction<'info> {
     pub fn remove_prediction(&mut self, bumps: &BTreeMap<String, u8>) -> Result<()> {
         match self.poll.crowd_prediction {
-            Some(crow_prediction) => {
+            Some(crowd_prediction) => {
                 assert!(self.poll.num_forecasters > 0);
                 assert!(self.poll.num_prediction_updates > 0);
                 self.poll.num_prediction_updates += 1;
 
+                let old_prediction = self.user_prediction.get_prediction();
+                let old_uncertainty = (self.user_prediction.upper_prediction
+                    - self.user_prediction.lower_prediction)
+                    as f32
+                    / 1000.0;
+
                 if self.poll.num_forecasters == 1 {
                     self.poll.crowd_prediction = None;
                 } else {
-                    let n = self.poll.num_forecasters as f32;
-                    assert!(n > 0.0);
-                    let old_prediction = self.user_prediction.get_prediction();
                     let op_f = convert_to_float(
                         10u32.pow(PREDICTION_PRECISION as u32) * old_prediction as u32,
                     );
-                    let cp_f = convert_to_float(crow_prediction);
+                    let cp_f = convert_to_float(crowd_prediction);
 
                     let new_cp_f = (self.poll.accumulated_weights * cp_f
-                        - self.user_prediction.weight * op_f)
-                        / (self.poll.accumulated_weights - self.user_prediction.weight);
+                        - (1.0 - old_uncertainty) * self.user_prediction.weight * op_f)
+                        / (self.poll.accumulated_weights
+                            - (1.0 - old_uncertainty) * self.user_prediction.weight);
                     let new_crowd_prediction = convert_from_float(new_cp_f);
                     self.poll.crowd_prediction = Some(new_crowd_prediction);
                 }
 
                 self.poll.num_forecasters -= 1;
-                self.poll.accumulated_weights -= self.user_prediction.weight;
+                self.poll.accumulated_weights -=
+                    (1.0 - old_uncertainty) * self.user_prediction.weight;
                 msg!("Updated crowd prediction");
             }
             None => {

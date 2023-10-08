@@ -35,6 +35,9 @@ describe("convergence", () => {
   const secondPrediction = 99;
   const updatedSecondPrediction = 500;
 
+  const uncertainty1 = 100;
+  const uncertainty2 = 25;
+
   const secondUser = Keypair.generate();
 
   it("prefunds payer wallet with sol and spl token", async () => {
@@ -136,7 +139,7 @@ describe("convergence", () => {
       );
 
     await program.methods
-      .makePrediction(prediction - 14, prediction + 14)
+      .makePrediction(prediction - uncertainty1, prediction + uncertainty1)
       .accounts({
         user: userAddress,
         poll: pollAddress,
@@ -159,11 +162,11 @@ describe("convergence", () => {
       "Wrong number of prediction updates."
     );
     expect(predictionAccount.lowerPrediction).to.eq(
-      prediction - 14,
+      prediction - uncertainty1,
       "Wrong prediction."
     );
     expect(predictionAccount.upperPrediction).to.eq(
-      prediction + 14,
+      prediction + uncertainty1,
       "Wrong prediction."
     );
     expect(pollAccount.crowdPrediction).to.eq(
@@ -171,7 +174,7 @@ describe("convergence", () => {
       "Wrong crowd prediction."
     );
     expect(pollAccount.accumulatedWeights).to.eq(
-      userAccount.score,
+      (1 - (2 * uncertainty1) / 1000) * userAccount.score,
       "Wrong accumulated weights"
     );
     expect(pollAccount.numForecasters.toString()).to.eq(
@@ -195,10 +198,17 @@ describe("convergence", () => {
     );
     let pollAccount = await program.account.poll.fetch(pollAddress);
 
-    let [userAddress, _userBump] = anchor.web3.PublicKey.findProgramAddressSync(
-      [Buffer.from("user"), secondUser.publicKey.toBuffer()],
-      program.programId
-    );
+    let [user1Address, _user1Bump] =
+      anchor.web3.PublicKey.findProgramAddressSync(
+        [Buffer.from("user"), program.provider.publicKey.toBuffer()],
+        program.programId
+      );
+
+    let [user2Address, _user2Bump] =
+      anchor.web3.PublicKey.findProgramAddressSync(
+        [Buffer.from("user"), secondUser.publicKey.toBuffer()],
+        program.programId
+      );
 
     let [predictionAddress, predictionBump] =
       anchor.web3.PublicKey.findProgramAddressSync(
@@ -221,10 +231,13 @@ describe("convergence", () => {
       );
 
     await program.methods
-      .makePrediction(secondPrediction - 22, secondPrediction + 22)
+      .makePrediction(
+        secondPrediction - uncertainty2,
+        secondPrediction + uncertainty2
+      )
       .accounts({
         forecaster: secondUser.publicKey,
-        user: userAddress,
+        user: user2Address,
         poll: pollAddress,
         userPrediction: predictionAddress,
         predictionUpdate: predictionUpdateAddress,
@@ -233,34 +246,39 @@ describe("convergence", () => {
       .rpc();
 
     pollAccount = await program.account.poll.fetch(pollAddress);
-    const userAccount = await program.account.user.fetch(userAddress);
+    const user1Account = await program.account.user.fetch(user1Address);
+    const user2Account = await program.account.user.fetch(user2Address);
     const predictionAccount = await program.account.userPrediction.fetch(
       predictionAddress
     );
     const updateAccount = await program.account.predictionUpdate.fetch(
       predictionUpdateAddress
     );
+    const weight1 = (1 - (2 * uncertainty1) / 1000) * user1Account.score;
+    const weight2 = (1 - (2 * uncertainty2) / 1000) * user2Account.score;
 
     expect(pollAccount.numPredictionUpdates.toString()).to.eq(
       "2",
       "Wrong number of prediction updates."
     );
     expect(predictionAccount.lowerPrediction).to.eq(
-      secondPrediction - 22,
+      secondPrediction - uncertainty2,
       "Wrong prediction."
     );
     expect(predictionAccount.upperPrediction).to.eq(
-      secondPrediction + 22,
+      secondPrediction + uncertainty2,
       "Wrong prediction."
     );
     expect(pollAccount.accumulatedWeights).to.eq(
-      2 * userAccount.score,
+      weight1 + weight2,
       "Wrong accumulated weights"
     );
     expect(predictionAccount.bump).to.eq(predictionBump, "Wrong bump.");
     expect(pollAccount.crowdPrediction).to.eq(
       Math.floor(
-        (10 ** precision * prediction + 10 ** precision * secondPrediction) / 2
+        (weight1 * 10 ** precision * prediction +
+          weight2 * 10 ** precision * secondPrediction) /
+          (weight1 + weight2)
       ),
       "Wrong crowd prediction."
     );
@@ -274,7 +292,9 @@ describe("convergence", () => {
     );
     expect(updateAccount.prediction).to.eq(
       Math.floor(
-        (10 ** precision * prediction + 10 ** precision * secondPrediction) / 2
+        (weight1 * 10 ** precision * prediction +
+          weight2 * 10 ** precision * secondPrediction) /
+          (weight1 + weight2)
       ),
       "Wrong prediction stored."
     );
@@ -287,7 +307,19 @@ describe("convergence", () => {
     );
     let pollAccount = await program.account.poll.fetch(pollAddress);
 
-    let [predictionAddress, predictionBump] =
+    let [user1Address, _user1Bump] =
+      anchor.web3.PublicKey.findProgramAddressSync(
+        [Buffer.from("user"), program.provider.publicKey.toBuffer()],
+        program.programId
+      );
+
+    let [user2Address, _user2Bump] =
+      anchor.web3.PublicKey.findProgramAddressSync(
+        [Buffer.from("user"), secondUser.publicKey.toBuffer()],
+        program.programId
+      );
+
+    let [predictionAddress, _predictionBump] =
       anchor.web3.PublicKey.findProgramAddressSync(
         [
           Buffer.from("user_prediction"),
@@ -319,6 +351,11 @@ describe("convergence", () => {
       .rpc();
 
     pollAccount = await program.account.poll.fetch(pollAddress);
+    const user1Account = await program.account.user.fetch(user1Address);
+    const user2Account = await program.account.user.fetch(user2Address);
+    const weight1 = (1 - (2 * uncertainty1) / 1000) * user1Account.score;
+    const weight2 = user2Account.score;
+
     const predictionAccount = await program.account.userPrediction.fetch(
       predictionAddress
     );
@@ -340,9 +377,9 @@ describe("convergence", () => {
     );
     expect(pollAccount.crowdPrediction).to.eq(
       Math.floor(
-        (10 ** precision * prediction +
-          10 ** precision * updatedSecondPrediction) /
-          2
+        (weight1 * 10 ** precision * prediction +
+          weight2 * 10 ** precision * updatedSecondPrediction) /
+          (weight1 + weight2)
       ),
       "Wrong crowd prediction."
     );
@@ -356,9 +393,9 @@ describe("convergence", () => {
     );
     expect(updateAccount.prediction).to.eq(
       Math.floor(
-        (10 ** precision * prediction +
-          10 ** precision * updatedSecondPrediction) /
-          2
+        (weight1 * 10 ** precision * prediction +
+          weight2 * 10 ** precision * updatedSecondPrediction) /
+          (weight1 + weight2)
       ),
       "Wrong prediction stored."
     );
@@ -411,12 +448,13 @@ describe("convergence", () => {
       "4",
       "Wrong number of prediction updates."
     );
-    expect(pollAccount.crowdPrediction).to.eq(
+    expect(pollAccount.crowdPrediction).to.approximately(
       10 ** precision * prediction,
+      1,
       "Wrong crowd prediction."
     );
     expect(pollAccount.accumulatedWeights).to.eq(
-      100.0,
+      (1 - (2 * uncertainty1) / 1000) * 100.0,
       "Wrong accumulated weigths."
     );
     expect(pollAccount.numForecasters.toString()).to.eq(
@@ -427,8 +465,9 @@ describe("convergence", () => {
       updateBump,
       "Wrong bump for prediction update account."
     );
-    expect(updateAccount.prediction).to.eq(
+    expect(updateAccount.prediction).to.approximately(
       10 ** precision * prediction,
+      1,
       "Wrong prediction stored."
     );
   });
@@ -528,7 +567,7 @@ describe("convergence", () => {
       );
 
     await program.methods
-      .makePrediction(prediction - 25, prediction + 25)
+      .makePrediction(prediction - uncertainty2, prediction + uncertainty2)
       .accounts({
         user: userAddress,
         poll: pollAddress,
@@ -550,15 +589,15 @@ describe("convergence", () => {
       "Wrong number of prediction updates."
     );
     expect(pollAccount.accumulatedWeights).to.eq(
-      100.0,
+      (1 - (2 * uncertainty2) / 1000) * 100.0,
       "Wrong accumulated weigths."
     );
     expect(predictionAccount.lowerPrediction).to.eq(
-      prediction - 25,
+      prediction - uncertainty2,
       "Wrong prediction."
     );
     expect(predictionAccount.upperPrediction).to.eq(
-      prediction + 25,
+      prediction + uncertainty2,
       "Wrong prediction."
     );
     expect(pollAccount.crowdPrediction).to.eq(
