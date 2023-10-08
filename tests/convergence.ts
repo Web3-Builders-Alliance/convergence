@@ -339,6 +339,10 @@ describe("convergence", () => {
     const scoringAccount = await program.account.scoringList.fetch(
       scoringListAddress
     );
+    const userScoreAccount = await program.account.userScore.fetch(
+      userScoreAddress
+    );
+    console.log("user score", userScoreAccount);
 
     const weight1 = (1 - (2 * uncertainty1) / 100) * user1Account.score;
     const weight2 = (1 - (2 * uncertainty2) / 100) * user2Account.score;
@@ -475,6 +479,10 @@ describe("convergence", () => {
     const updateAccount = await program.account.predictionUpdate.fetch(
       predictionUpdateAddress
     );
+    const userScoreAccount = await program.account.userScore.fetch(
+      userScoreAddress
+    );
+    console.log("user score", userScoreAccount);
 
     expect(pollAccount.numPredictionUpdates.toString()).to.eq(
       "3",
