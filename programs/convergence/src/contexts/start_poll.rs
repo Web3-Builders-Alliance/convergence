@@ -21,7 +21,7 @@ pub struct StartPoll<'info> {
         seeds=[ScoringList::SEED_PREFIX.as_bytes(), poll.key().as_ref()],
         bump=scoring_list.bump
     )]
-    pub scoring_list: Account<'info, ScoringList>,
+    pub scoring_list: Box<Account<'info, ScoringList>>,
     pub system_program: Program<'info, System>,
 }
 

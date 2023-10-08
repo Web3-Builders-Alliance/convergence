@@ -24,7 +24,7 @@ pub struct CreatePoll<'info> {
         space=10240 as usize,
         bump
     )]
-    pub scoring_list: Account<'info, ScoringList>,
+    pub scoring_list: Box<Account<'info, ScoringList>>,
     pub system_program: Program<'info, System>,
 }
 

@@ -35,6 +35,12 @@ pub struct MakePrediction<'info> {
         bump,
     )]
     pub prediction_update: Account<'info, PredictionUpdate>,
+    #[account(
+        mut,
+        seeds=[ScoringList::SEED_PREFIX.as_bytes(), poll.key().as_ref()],
+        bump=scoring_list.bump
+    )]
+    pub scoring_list: Box<Account<'info, ScoringList>>,
     pub system_program: Program<'info, System>,
 }
 
@@ -87,6 +93,9 @@ impl<'info> MakePrediction<'info> {
                 let new_crowd_prediction = convert_from_float(new_cp_f);
                 self.poll.crowd_prediction = Some(new_crowd_prediction);
 
+                let current_slot = Clock::get().unwrap().slot;
+
+                // self.scoring_list.last_slot = current_slot;
                 msg!("Updated crowd prediction");
             }
             None => {
@@ -97,6 +106,8 @@ impl<'info> MakePrediction<'info> {
                 self.poll.num_forecasters = 1;
                 self.poll.accumulated_weights = (1.0 - uncertainty) * self.user_prediction.weight;
                 self.poll.num_prediction_updates += 1;
+
+                // self.scoring_list.last_slot = Clock::get().unwrap().slot;
             }
         }
 

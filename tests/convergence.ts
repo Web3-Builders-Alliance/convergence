@@ -41,7 +41,7 @@ describe("convergence", () => {
   const secondUser = Keypair.generate();
 
   it("prefunds payer wallet with sol and spl token", async () => {
-    const solAmount = 10 * LAMPORTS_PER_SOL;
+    const solAmount = 100 * LAMPORTS_PER_SOL;
     await program.provider.connection
       .requestAirdrop(secondUser.publicKey, solAmount)
       .then(confirmTx);
@@ -109,8 +109,7 @@ describe("convergence", () => {
     expect(pollAccount.crowdPrediction).to.eq(null);
     expect(pollAccount.accumulatedWeights).to.eq(0.0);
     expect(pollAccount.bump).to.eq(pollBump);
-    expect(scoringAccount.optionA.length).to.eq(1001, "Wrong array length");
-    expect(scoringAccount.optionB.length).to.eq(0, "Wrong array length");
+    expect(scoringAccount.option.length).to.eq(1001, "Wrong array length");
     expect(scoringAccount.lastSlot.toString()).to.eq("0", "Wrong slot");
     expect(scoringAccount.bump).to.eq(scoringBump);
   });
@@ -142,8 +141,7 @@ describe("convergence", () => {
       currentSlot.toString(),
       "Wrong slot."
     );
-    expect(scoringAccount.optionA.length).to.eq(1001, "Wrong array length");
-    expect(scoringAccount.optionB.length).to.eq(1001, "Wrong array length");
+    expect(scoringAccount.option.length).to.eq(1001, "Wrong array length");
     expect(scoringAccount.lastSlot.toString()).to.eq(
       currentSlot.toString(),
       "Wrong slot."
@@ -161,7 +159,7 @@ describe("convergence", () => {
       program.programId
     );
 
-    let [userPredictionAddress, predictionBump] =
+    let [userPredictionAddress, _predictionBump] =
       anchor.web3.PublicKey.findProgramAddressSync(
         [
           Buffer.from("user_prediction"),
@@ -181,6 +179,12 @@ describe("convergence", () => {
         program.programId
       );
 
+    let [scoringListAddress, _scoringBump] =
+      anchor.web3.PublicKey.findProgramAddressSync(
+        [Buffer.from("scoring_list"), pollAddress.toBuffer()],
+        program.programId
+      );
+
     await program.methods
       .makePrediction(prediction - uncertainty1, prediction + uncertainty1)
       .accounts({
@@ -188,6 +192,7 @@ describe("convergence", () => {
         poll: pollAddress,
         userPrediction: userPredictionAddress,
         predictionUpdate: predictionUpdateAddress,
+        scoringList: scoringListAddress,
       })
       .rpc();
 
@@ -198,6 +203,9 @@ describe("convergence", () => {
     );
     const updateAccount = await program.account.predictionUpdate.fetch(
       predictionUpdateAddress
+    );
+    const scoringAccount = await program.account.scoringList.fetch(
+      scoringListAddress
     );
 
     expect(pollAccount.numPredictionUpdates.toString()).to.eq(
@@ -273,6 +281,12 @@ describe("convergence", () => {
         program.programId
       );
 
+    let [scoringListAddress, _scoringBump] =
+      anchor.web3.PublicKey.findProgramAddressSync(
+        [Buffer.from("scoring_list"), pollAddress.toBuffer()],
+        program.programId
+      );
+
     await program.methods
       .makePrediction(
         secondPrediction - uncertainty2,
@@ -284,6 +298,7 @@ describe("convergence", () => {
         poll: pollAddress,
         userPrediction: predictionAddress,
         predictionUpdate: predictionUpdateAddress,
+        scoringList: scoringListAddress,
       })
       .signers([secondUser])
       .rpc();
@@ -297,6 +312,10 @@ describe("convergence", () => {
     const updateAccount = await program.account.predictionUpdate.fetch(
       predictionUpdateAddress
     );
+    const scoringAccount = await program.account.scoringList.fetch(
+      scoringListAddress
+    );
+
     const weight1 = (1 - (2 * uncertainty1) / 1000) * user1Account.score;
     const weight2 = (1 - (2 * uncertainty2) / 1000) * user2Account.score;
 
