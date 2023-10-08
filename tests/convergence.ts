@@ -109,7 +109,7 @@ describe("convergence", () => {
     expect(pollAccount.crowdPrediction).to.eq(null);
     expect(pollAccount.accumulatedWeights).to.eq(0.0);
     expect(pollAccount.bump).to.eq(pollBump);
-    expect(scoringAccount.option.length).to.eq(101, "Wrong array length");
+    expect(scoringAccount.options.length).to.eq(101, "Wrong array length");
     expect(scoringAccount.lastSlot.toString()).to.eq("0", "Wrong slot");
     expect(scoringAccount.bump).to.eq(scoringBump);
   });
@@ -141,7 +141,7 @@ describe("convergence", () => {
       currentSlot.toString(),
       "Wrong slot."
     );
-    expect(scoringAccount.option.length).to.eq(101, "Wrong array length");
+    expect(scoringAccount.options.length).to.eq(101, "Wrong array length");
     expect(scoringAccount.lastSlot.toString()).to.eq(
       currentSlot.toString(),
       "Wrong slot."
@@ -206,7 +206,7 @@ describe("convergence", () => {
     );
     const scoringAccount = await program.account.scoringList.fetch(
       scoringListAddress
-    );
+    ); // need to write tests for this
 
     expect(pollAccount.numPredictionUpdates.toString()).to.eq(
       "1",
@@ -359,6 +359,15 @@ describe("convergence", () => {
           (weight1 + weight2)
       ),
       "Wrong prediction stored."
+    );
+    expect(scoringAccount.cost[prediction]).to.eq(0, "Wrong cost.");
+    expect(scoringAccount.cost[prediction + 1]).to.be.greaterThan(
+      0,
+      "Wrong cost."
+    );
+    expect(scoringAccount.cost[prediction - 1]).to.be.lessThan(
+      0,
+      "Wrong cost."
     );
   });
 

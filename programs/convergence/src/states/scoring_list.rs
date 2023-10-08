@@ -4,7 +4,7 @@ use crate::constants::*;
 
 #[account]
 pub struct ScoringList {
-    pub option: Vec<i64>,
+    pub options: Vec<i64>,
     pub cost: Vec<f32>,
     pub last_slot: u64,
     pub bump: u8,
@@ -17,7 +17,7 @@ impl ScoringList {
 
     pub fn new(bump: u8) -> Self {
         Self {
-            option: vec![0; 101],
+            options: vec![0; 101],
             cost: vec![],
             last_slot: 0,
             bump,

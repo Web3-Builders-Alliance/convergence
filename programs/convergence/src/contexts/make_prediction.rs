@@ -94,6 +94,38 @@ impl<'info> MakePrediction<'info> {
                 self.poll.crowd_prediction = Some(new_crowd_prediction);
 
                 let current_slot = Clock::get().unwrap().slot;
+                let last_slot = self.scoring_list.last_slot;
+
+                for num in self
+                    .scoring_list
+                    .options
+                    .iter_mut()
+                    .take(cp_f.ceil() as usize)
+                {
+                    *num -= (current_slot - last_slot) as i64;
+                }
+
+                for cost in self.scoring_list.cost.iter_mut().take(cp_f.ceil() as usize) {
+                    *cost -= (current_slot - last_slot) as f32 * cp_f / 100.0;
+                }
+
+                for num in self
+                    .scoring_list
+                    .options
+                    .iter_mut()
+                    .skip(1 + cp_f.floor() as usize)
+                {
+                    *num += (current_slot - last_slot) as i64;
+                }
+
+                for cost in self
+                    .scoring_list
+                    .cost
+                    .iter_mut()
+                    .skip(1 + cp_f.floor() as usize)
+                {
+                    *cost += (current_slot - last_slot) as f32 * cp_f / 100.0;
+                }
 
                 self.scoring_list.last_slot = current_slot;
                 msg!("Updated crowd prediction");
