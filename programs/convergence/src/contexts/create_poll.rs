@@ -17,6 +17,14 @@ pub struct CreatePoll<'info> {
         bump
     )]
     pub poll: Account<'info, Poll>,
+    #[account(
+        init,
+        payer = creator,
+        seeds=[ScoringList::SEED_PREFIX.as_bytes(), poll.key().as_ref()],
+        space=10240 as usize,
+        bump
+    )]
+    pub scoring_list: Account<'info, ScoringList>,
     pub system_program: Program<'info, System>,
 }
 
@@ -26,16 +34,19 @@ impl<'info> CreatePoll<'info> {
         bumps: &BTreeMap<String, u8>,
         question: String,
         description: String,
-        start_time: u64,
         end_time: Option<u64>,
     ) -> Result<()> {
         self.poll.set_inner(Poll::new(
             *self.creator.key,
             question,
             description,
-            start_time,
             end_time,
             *bumps.get("poll").expect("Failed to fetch bump for 'poll'"),
+        ));
+        self.scoring_list.set_inner(ScoringList::new(
+            *bumps
+                .get("scoring_list")
+                .expect("Failed to fetch bump for 'scoring_list'"),
         ));
         msg!("Created poll");
         Ok(())

@@ -79,32 +79,75 @@ describe("convergence", () => {
   });
 
   it("creates poll!", async () => {
-    let [pollAddress, bump] = anchor.web3.PublicKey.findProgramAddressSync(
+    let [pollAddress, pollBump] = anchor.web3.PublicKey.findProgramAddressSync(
       [Buffer.from("poll"), Buffer.from(question)],
       program.programId
     );
 
+    let [scoringListAddress, scoringBump] =
+      anchor.web3.PublicKey.findProgramAddressSync(
+        [Buffer.from("scoring_list"), pollAddress.toBuffer()],
+        program.programId
+      );
+
     await program.methods
-      .createPoll(
-        question,
-        description,
-        new anchor.BN(startTime),
-        new anchor.BN(endTime)
-      )
-      .accounts({ poll: pollAddress })
+      .createPoll(question, description, new anchor.BN(endTime))
+      .accounts({ poll: pollAddress, scoringList: scoringListAddress })
       .rpc();
 
     const pollAccount = await program.account.poll.fetch(pollAddress);
+    const scoringAccount = await program.account.scoringList.fetch(
+      scoringListAddress
+    );
 
     expect(pollAccount.question).to.eq(question, "Wrong question.");
     expect(pollAccount.description).to.eq(description, "Wrong description");
-    expect(pollAccount.startTime.toString()).to.eq(startTime.toString());
+    expect(pollAccount.startSlot.toString()).to.eq("0");
     expect(pollAccount.endTime.toString()).to.eq(endTime.toString());
     expect(pollAccount.numForecasters.toString()).to.eq("0");
     expect(pollAccount.numPredictionUpdates.toString()).to.eq("0");
     expect(pollAccount.crowdPrediction).to.eq(null);
     expect(pollAccount.accumulatedWeights).to.eq(0.0);
-    expect(pollAccount.bump).to.eq(bump);
+    expect(pollAccount.bump).to.eq(pollBump);
+    expect(scoringAccount.optionA.length).to.eq(1001, "Wrong array length");
+    expect(scoringAccount.optionB.length).to.eq(0, "Wrong array length");
+    expect(scoringAccount.lastSlot.toString()).to.eq("0", "Wrong slot");
+    expect(scoringAccount.bump).to.eq(scoringBump);
+  });
+
+  it("starts poll!", async () => {
+    let [pollAddress, _pollBump] = anchor.web3.PublicKey.findProgramAddressSync(
+      [Buffer.from("poll"), Buffer.from(question)],
+      program.programId
+    );
+
+    let [scoringListAddress, _scoringBump] =
+      anchor.web3.PublicKey.findProgramAddressSync(
+        [Buffer.from("scoring_list"), pollAddress.toBuffer()],
+        program.programId
+      );
+
+    await program.methods
+      .startPoll()
+      .accounts({ poll: pollAddress, scoringList: scoringListAddress })
+      .rpc();
+
+    const pollAccount = await program.account.poll.fetch(pollAddress);
+    const scoringAccount = await program.account.scoringList.fetch(
+      scoringListAddress
+    );
+
+    const currentSlot = await program.provider.connection.getSlot();
+    expect(pollAccount.startSlot.toString()).to.eq(
+      currentSlot.toString(),
+      "Wrong slot."
+    );
+    expect(scoringAccount.optionA.length).to.eq(1001, "Wrong array length");
+    expect(scoringAccount.optionB.length).to.eq(1001, "Wrong array length");
+    expect(scoringAccount.lastSlot.toString()).to.eq(
+      currentSlot.toString(),
+      "Wrong slot."
+    );
   });
 
   it("makes a prediction!", async () => {

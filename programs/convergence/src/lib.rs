@@ -21,11 +21,14 @@ pub mod convergence {
         ctx: Context<CreatePoll>,
         question: String,
         description: String,
-        start_time: u64,
         end_time: Option<u64>,
     ) -> Result<()> {
         ctx.accounts
-            .create_poll(&ctx.bumps, question, description, start_time, end_time)
+            .create_poll(&ctx.bumps, question, description, end_time)
+    }
+
+    pub fn start_poll(ctx: Context<StartPoll>) -> Result<()> {
+        ctx.accounts.start_poll()
     }
 
     pub fn make_prediction(
