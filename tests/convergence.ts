@@ -115,7 +115,7 @@ describe("convergence", () => {
       program.programId
     );
 
-    let [predictionAddress, predictionBump] =
+    let [userPredictionAddress, predictionBump] =
       anchor.web3.PublicKey.findProgramAddressSync(
         [
           Buffer.from("user_prediction"),
@@ -125,19 +125,33 @@ describe("convergence", () => {
         program.programId
       );
 
+    let [predictionUpdateAddress, updateBump] =
+      anchor.web3.PublicKey.findProgramAddressSync(
+        [
+          Buffer.from("prediction_update"),
+          pollAddress.toBuffer(),
+          new anchor.BN(0).toArrayLike(Buffer, "le", 8),
+        ],
+        program.programId
+      );
+
     await program.methods
       .makePrediction(prediction - 14, prediction + 14)
       .accounts({
         user: userAddress,
         poll: pollAddress,
-        userPrediction: predictionAddress,
+        userPrediction: userPredictionAddress,
+        predictionUpdate: predictionUpdateAddress,
       })
       .rpc();
 
     const pollAccount = await program.account.poll.fetch(pollAddress);
     const userAccount = await program.account.user.fetch(userAddress);
     const predictionAccount = await program.account.userPrediction.fetch(
-      predictionAddress
+      userPredictionAddress
+    );
+    const updateAccount = await program.account.predictionUpdate.fetch(
+      predictionUpdateAddress
     );
 
     expect(pollAccount.numPredictionUpdates.toString()).to.eq(
@@ -164,6 +178,14 @@ describe("convergence", () => {
       "1",
       "Wrong number of predictions."
     );
+    expect(updateAccount.bump).to.eq(
+      updateBump,
+      "Wrong bump for prediction update account."
+    );
+    expect(updateAccount.prediction).to.eq(
+      10 ** precision * prediction,
+      "Wrong prediction stored."
+    );
   });
 
   it("updates crowd prediction when user makes prediction!", async () => {
@@ -171,6 +193,7 @@ describe("convergence", () => {
       [Buffer.from("poll"), Buffer.from(question)],
       program.programId
     );
+    let pollAccount = await program.account.poll.fetch(pollAddress);
 
     let [userAddress, _userBump] = anchor.web3.PublicKey.findProgramAddressSync(
       [Buffer.from("user"), secondUser.publicKey.toBuffer()],
@@ -187,6 +210,16 @@ describe("convergence", () => {
         program.programId
       );
 
+    let [predictionUpdateAddress, updateBump] =
+      anchor.web3.PublicKey.findProgramAddressSync(
+        [
+          Buffer.from("prediction_update"),
+          pollAddress.toBuffer(),
+          pollAccount.numPredictionUpdates.toArrayLike(Buffer, "le", 8),
+        ],
+        program.programId
+      );
+
     await program.methods
       .makePrediction(secondPrediction - 22, secondPrediction + 22)
       .accounts({
@@ -194,14 +227,18 @@ describe("convergence", () => {
         user: userAddress,
         poll: pollAddress,
         userPrediction: predictionAddress,
+        predictionUpdate: predictionUpdateAddress,
       })
       .signers([secondUser])
       .rpc();
 
-    const pollAccount = await program.account.poll.fetch(pollAddress);
+    pollAccount = await program.account.poll.fetch(pollAddress);
     const userAccount = await program.account.user.fetch(userAddress);
     const predictionAccount = await program.account.userPrediction.fetch(
       predictionAddress
+    );
+    const updateAccount = await program.account.predictionUpdate.fetch(
+      predictionUpdateAddress
     );
 
     expect(pollAccount.numPredictionUpdates.toString()).to.eq(
@@ -231,6 +268,16 @@ describe("convergence", () => {
       "2",
       "Wrong number of predictions."
     );
+    expect(updateAccount.bump).to.eq(
+      updateBump,
+      "Wrong bump for prediction update account."
+    );
+    expect(updateAccount.prediction).to.eq(
+      Math.floor(
+        (10 ** precision * prediction + 10 ** precision * secondPrediction) / 2
+      ),
+      "Wrong prediction stored."
+    );
   });
 
   it("updates crowd prediction when user updates own prediction!", async () => {
@@ -238,6 +285,7 @@ describe("convergence", () => {
       [Buffer.from("poll"), Buffer.from(question)],
       program.programId
     );
+    let pollAccount = await program.account.poll.fetch(pollAddress);
 
     let [predictionAddress, predictionBump] =
       anchor.web3.PublicKey.findProgramAddressSync(
@@ -249,19 +297,33 @@ describe("convergence", () => {
         program.programId
       );
 
+    let [predictionUpdateAddress, updateBump] =
+      anchor.web3.PublicKey.findProgramAddressSync(
+        [
+          Buffer.from("prediction_update"),
+          pollAddress.toBuffer(),
+          pollAccount.numPredictionUpdates.toArrayLike(Buffer, "le", 8),
+        ],
+        program.programId
+      );
+
     await program.methods
       .updatePrediction(updatedSecondPrediction, updatedSecondPrediction)
       .accounts({
         forecaster: secondUser.publicKey,
         poll: pollAddress,
         userPrediction: predictionAddress,
+        predictionUpdate: predictionUpdateAddress,
       })
       .signers([secondUser])
       .rpc();
 
-    const pollAccount = await program.account.poll.fetch(pollAddress);
+    pollAccount = await program.account.poll.fetch(pollAddress);
     const predictionAccount = await program.account.userPrediction.fetch(
       predictionAddress
+    );
+    const updateAccount = await program.account.predictionUpdate.fetch(
+      predictionUpdateAddress
     );
 
     expect(pollAccount.numPredictionUpdates.toString()).to.eq(
@@ -288,6 +350,18 @@ describe("convergence", () => {
       "2",
       "Wrong number of predictions."
     );
+    expect(updateAccount.bump).to.eq(
+      updateBump,
+      "Wrong bump for prediction update account."
+    );
+    expect(updateAccount.prediction).to.eq(
+      Math.floor(
+        (10 ** precision * prediction +
+          10 ** precision * updatedSecondPrediction) /
+          2
+      ),
+      "Wrong prediction stored."
+    );
   });
 
   it("updates crowd prediction when user removes own prediction!", async () => {
@@ -295,6 +369,7 @@ describe("convergence", () => {
       [Buffer.from("poll"), Buffer.from(question)],
       program.programId
     );
+    let pollAccount = await program.account.poll.fetch(pollAddress);
 
     let [predictionAddress, _predictionBump] =
       anchor.web3.PublicKey.findProgramAddressSync(
@@ -306,17 +381,31 @@ describe("convergence", () => {
         program.programId
       );
 
+    let [predictionUpdateAddress, updateBump] =
+      anchor.web3.PublicKey.findProgramAddressSync(
+        [
+          Buffer.from("prediction_update"),
+          pollAddress.toBuffer(),
+          pollAccount.numPredictionUpdates.toArrayLike(Buffer, "le", 8),
+        ],
+        program.programId
+      );
+
     await program.methods
       .removePrediction()
       .accounts({
         forecaster: secondUser.publicKey,
         poll: pollAddress,
         userPrediction: predictionAddress,
+        predictionUpdate: predictionUpdateAddress,
       })
       .signers([secondUser])
       .rpc();
 
-    const pollAccount = await program.account.poll.fetch(pollAddress);
+    pollAccount = await program.account.poll.fetch(pollAddress);
+    let updateAccount = await program.account.predictionUpdate.fetch(
+      predictionUpdateAddress
+    );
 
     expect(pollAccount.numPredictionUpdates.toString()).to.eq(
       "4",
@@ -334,6 +423,14 @@ describe("convergence", () => {
       "1",
       "Wrong number of predictions."
     );
+    expect(updateAccount.bump).to.eq(
+      updateBump,
+      "Wrong bump for prediction update account."
+    );
+    expect(updateAccount.prediction).to.eq(
+      10 ** precision * prediction,
+      "Wrong prediction stored."
+    );
   });
 
   it("removes crowd prediction when every user removes own prediction!", async () => {
@@ -341,6 +438,7 @@ describe("convergence", () => {
       [Buffer.from("poll"), Buffer.from(question)],
       program.programId
     );
+    let pollAccount = await program.account.poll.fetch(pollAddress);
 
     let [predictionAddress, _predictionBump] =
       anchor.web3.PublicKey.findProgramAddressSync(
@@ -352,16 +450,30 @@ describe("convergence", () => {
         program.programId
       );
 
+    let [predictionUpdateAddress, updateBump] =
+      anchor.web3.PublicKey.findProgramAddressSync(
+        [
+          Buffer.from("prediction_update"),
+          pollAddress.toBuffer(),
+          pollAccount.numPredictionUpdates.toArrayLike(Buffer, "le", 8),
+        ],
+        program.programId
+      );
+
     await program.methods
       .removePrediction()
       .accounts({
         forecaster: program.provider.publicKey,
         poll: pollAddress,
         userPrediction: predictionAddress,
+        predictionUpdate: predictionUpdateAddress,
       })
       .rpc();
 
-    const pollAccount = await program.account.poll.fetch(pollAddress);
+    pollAccount = await program.account.poll.fetch(pollAddress);
+    let updateAccount = await program.account.predictionUpdate.fetch(
+      predictionUpdateAddress
+    );
 
     expect(pollAccount.numPredictionUpdates.toString()).to.eq(
       "5",
@@ -376,6 +488,11 @@ describe("convergence", () => {
       "0",
       "Wrong number of predictions."
     );
+    expect(updateAccount.bump).to.eq(
+      updateBump,
+      "Wrong bump for prediction update account."
+    );
+    expect(updateAccount.prediction).to.eq(null, "Wrong prediction stored.");
   });
 
   it("can make again a prediction after removing it!", async () => {
@@ -383,6 +500,7 @@ describe("convergence", () => {
       [Buffer.from("poll"), Buffer.from(question)],
       program.programId
     );
+    let pollAccount = await program.account.poll.fetch(pollAddress);
 
     let [userAddress, _userBump] = anchor.web3.PublicKey.findProgramAddressSync(
       [Buffer.from("user"), program.provider.publicKey.toBuffer()],
@@ -399,18 +517,32 @@ describe("convergence", () => {
         program.programId
       );
 
+    let [predictionUpdateAddress, updateBump] =
+      anchor.web3.PublicKey.findProgramAddressSync(
+        [
+          Buffer.from("prediction_update"),
+          pollAddress.toBuffer(),
+          pollAccount.numPredictionUpdates.toArrayLike(Buffer, "le", 8),
+        ],
+        program.programId
+      );
+
     await program.methods
       .makePrediction(prediction - 25, prediction + 25)
       .accounts({
         user: userAddress,
         poll: pollAddress,
         userPrediction: predictionAddress,
+        predictionUpdate: predictionUpdateAddress,
       })
       .rpc();
 
-    const pollAccount = await program.account.poll.fetch(pollAddress);
+    pollAccount = await program.account.poll.fetch(pollAddress);
     const predictionAccount = await program.account.userPrediction.fetch(
       predictionAddress
+    );
+    const updateAccount = await program.account.predictionUpdate.fetch(
+      predictionUpdateAddress
     );
 
     expect(pollAccount.numPredictionUpdates.toString()).to.eq(
@@ -436,6 +568,14 @@ describe("convergence", () => {
     expect(pollAccount.numForecasters.toString()).to.eq(
       "1",
       "Wrong number of predictions."
+    );
+    expect(updateAccount.bump).to.eq(
+      updateBump,
+      "Wrong bump for prediction update account."
+    );
+    expect(updateAccount.prediction).to.eq(
+      10 ** precision * prediction,
+      "Wrong prediction stored."
     );
   });
 });

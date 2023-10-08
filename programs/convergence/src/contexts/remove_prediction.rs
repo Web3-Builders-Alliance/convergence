@@ -1,3 +1,5 @@
+use std::collections::BTreeMap;
+
 use crate::states::*;
 use crate::utils::*;
 use anchor_lang::prelude::*;
@@ -19,11 +21,19 @@ pub struct RemovePrediction<'info> {
       close = forecaster
     )]
     pub user_prediction: Account<'info, UserPrediction>,
+    #[account(
+        init,
+        payer = forecaster,
+        seeds=[PredictionUpdate::SEED_PREFIX.as_bytes(), poll.key().as_ref(), &poll.num_prediction_updates.to_le_bytes()],
+        space= PredictionUpdate::LEN,
+        bump,
+    )]
+    pub prediction_update: Account<'info, PredictionUpdate>,
     pub system_program: Program<'info, System>,
 }
 
 impl<'info> RemovePrediction<'info> {
-    pub fn remove_prediction(&mut self) -> Result<()> {
+    pub fn remove_prediction(&mut self, bumps: &BTreeMap<String, u8>) -> Result<()> {
         match self.poll.crowd_prediction {
             Some(crow_prediction) => {
                 assert!(self.poll.num_forecasters > 0);
@@ -56,6 +66,14 @@ impl<'info> RemovePrediction<'info> {
                 assert!(false);
             }
         }
+
+        self.prediction_update.set_inner(PredictionUpdate::new(
+            self.poll.crowd_prediction,
+            *bumps
+                .get("prediction_update")
+                .expect("Failed to fetch bump for 'prediction_update'"),
+        ));
+
         Ok(())
     }
 }

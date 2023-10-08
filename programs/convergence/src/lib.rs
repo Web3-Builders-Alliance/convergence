@@ -40,7 +40,7 @@ pub mod convergence {
             upper_prediction,
             ctx.accounts.user.score,
         )?;
-        ctx.accounts.update_crowd_prediction(prediction)
+        ctx.accounts.update_crowd_prediction(&ctx.bumps, prediction)
     }
 
     pub fn update_prediction(
@@ -49,13 +49,14 @@ pub mod convergence {
         new_upper_prediction: u16,
     ) -> Result<()> {
         let new_prediction = (new_lower_prediction + new_upper_prediction) / 2;
-        ctx.accounts.update_crowd_prediction(new_prediction)?;
+        ctx.accounts
+            .update_crowd_prediction(&ctx.bumps, new_prediction)?;
         ctx.accounts
             .update_user_prediction(new_lower_prediction, new_upper_prediction)
     }
 
     pub fn remove_prediction(ctx: Context<RemovePrediction>) -> Result<()> {
-        ctx.accounts.remove_prediction()
+        ctx.accounts.remove_prediction(&ctx.bumps)
     }
 }
 
