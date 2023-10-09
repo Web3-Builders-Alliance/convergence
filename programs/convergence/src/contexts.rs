@@ -1,3 +1,4 @@
+mod collect_points;
 mod create_poll;
 mod make_prediction;
 mod register_user;
@@ -6,6 +7,7 @@ mod resolve_poll;
 mod start_poll;
 mod update_prediction;
 
+pub use collect_points::*;
 pub use create_poll::*;
 pub use make_prediction::*;
 pub use register_user::*;

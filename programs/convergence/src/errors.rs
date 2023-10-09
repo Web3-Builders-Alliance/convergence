@@ -4,4 +4,7 @@ use anchor_lang::prelude::*;
 pub enum CustomErrorCode {
     #[msg("Poll is closed.")]
     PollClosed,
+
+    #[msg("Poll has not been resolved.")]
+    PollNotResolved,
 }

@@ -134,13 +134,11 @@ impl<'info> UpdatePrediction<'info> {
                 let last_user_score_slot = self.user_score.last_slot;
                 self.user_score.ln_a += (current_slot - last_user_score_slot) as f32
                     * (1.0 - old_uncertainty)
-                    * (op_f / 100.0 + EPSILON).ln()
-                    + 2.0f32.ln();
+                    * ((op_f / 100.0 + EPSILON).ln() + 2.0f32.ln());
 
                 self.user_score.ln_b += (current_slot - last_user_score_slot) as f32
                     * (1.0 - old_uncertainty)
-                    * (1.0 - op_f / 100.0 + EPSILON).ln()
-                    + 2.0f32.ln();
+                    * ((1.0 - op_f / 100.0 + EPSILON).ln() + 2.0f32.ln());
 
                 let add_option = (self.scoring_list.options
                     [self.user_prediction.upper_prediction as usize]

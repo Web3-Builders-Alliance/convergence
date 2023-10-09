@@ -69,6 +69,11 @@ pub mod convergence {
     pub fn resolve_poll(ctx: Context<ResolvePoll>, result: bool) -> Result<()> {
         ctx.accounts.resolve_poll(result)
     }
+
+    pub fn collect_points(ctx: Context<CollectPoints>) -> Result<()> {
+        ctx.accounts.collect_points()?;
+        ctx.accounts.transfer_points_to_user()
+    }
 }
 
 #[derive(Accounts)]
