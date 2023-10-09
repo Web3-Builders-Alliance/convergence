@@ -25,6 +25,7 @@ describe("convergence", () => {
   const program = anchor.workspace.Convergence as Program<Convergence>;
 
   const precision = 4;
+  const result = true;
 
   const question = "First question";
   const description = "Describe exactly when it will resolve to true";
@@ -802,5 +803,51 @@ describe("convergence", () => {
       10 ** precision * prediction,
       "Wrong prediction stored."
     );
+  });
+
+  it("resolves poll!", async () => {
+    let [pollAddress, _pollBump] = anchor.web3.PublicKey.findProgramAddressSync(
+      [Buffer.from("poll"), Buffer.from(question)],
+      program.programId
+    );
+
+    let [scoringListAddress, _scoringBump] =
+      anchor.web3.PublicKey.findProgramAddressSync(
+        [Buffer.from("scoring_list"), pollAddress.toBuffer()],
+        program.programId
+      );
+
+    await program.methods
+      .resolvePoll(result)
+      .accounts({
+        poll: pollAddress,
+        scoringList: scoringListAddress,
+      })
+      .rpc();
+
+    const pollAccount = await program.account.poll.fetch(pollAddress);
+
+    const scoringAccount = await program.account.scoringList.fetch(
+      scoringListAddress
+    );
+
+    expect(pollAccount.numPredictionUpdates.toString()).to.eq(
+      "6",
+      "Wrong number of prediction updates."
+    );
+    expect(pollAccount.accumulatedWeights).to.eq(
+      (1 - (2 * uncertainty2) / 100) * 100.0,
+      "Wrong accumulated weights."
+    );
+    expect(pollAccount.crowdPrediction).to.eq(
+      10 ** precision * prediction,
+      "Wrong crowd prediction."
+    );
+    expect(pollAccount.numForecasters.toString()).to.eq(
+      "1",
+      "Wrong number of predictions."
+    );
+    expect(pollAccount.open).to.be.false;
+    expect(pollAccount.result).to.eq(result, "Wrong result.");
   });
 });

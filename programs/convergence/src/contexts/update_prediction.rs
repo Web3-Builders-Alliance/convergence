@@ -57,7 +57,7 @@ impl<'info> UpdatePrediction<'info> {
             return err!(CustomErrorCode::PollClosed);
         }
         match self.poll.crowd_prediction {
-            Some(crow_prediction) => {
+            Some(crowd_prediction) => {
                 assert!(self.poll.num_forecasters > 0);
                 assert!(self.poll.num_prediction_updates > 0);
                 assert!(self.poll.accumulated_weights > 0.0);
@@ -72,7 +72,7 @@ impl<'info> UpdatePrediction<'info> {
                 let op_f = convert_to_float(
                     10u32.pow(PREDICTION_PRECISION as u32) * old_prediction as u32,
                 );
-                let cp_f = convert_to_float(crow_prediction);
+                let cp_f = convert_to_float(crowd_prediction);
                 let np_f = convert_to_float(
                     10u32.pow(PREDICTION_PRECISION as u32) * new_prediction as u32,
                 );

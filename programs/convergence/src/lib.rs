@@ -65,6 +65,10 @@ pub mod convergence {
     pub fn remove_prediction(ctx: Context<RemovePrediction>) -> Result<()> {
         ctx.accounts.remove_prediction(&ctx.bumps)
     }
+
+    pub fn resolve_poll(ctx: Context<ResolvePoll>, result: bool) -> Result<()> {
+        ctx.accounts.resolve_poll(result)
+    }
 }
 
 #[derive(Accounts)]
