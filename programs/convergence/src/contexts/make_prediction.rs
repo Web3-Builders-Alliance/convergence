@@ -1,5 +1,6 @@
 use std::collections::BTreeMap;
 
+use crate::errors::*;
 use crate::states::*;
 use crate::utils::*;
 use anchor_lang::prelude::*;
@@ -63,6 +64,9 @@ impl<'info> MakePrediction<'info> {
         assert!(lower_prediction <= 100);
         assert!(upper_prediction <= 100);
         assert!(lower_prediction <= upper_prediction);
+        if !self.poll.open {
+            return err!(CustomErrorCode::PollClosed);
+        }
 
         self.user_prediction.set_inner(UserPrediction::new(
             lower_prediction,

@@ -1,6 +1,7 @@
 use std::collections::BTreeMap;
 
 use crate::constants::EPSILON;
+use crate::errors::*;
 use crate::states::*;
 use crate::utils::*;
 use anchor_lang::prelude::*;
@@ -52,6 +53,9 @@ impl<'info> UpdatePrediction<'info> {
         new_uncertainty: f32,
     ) -> Result<()> {
         assert!(new_prediction <= 100);
+        if !self.poll.open {
+            return err!(CustomErrorCode::PollClosed);
+        }
         match self.poll.crowd_prediction {
             Some(crow_prediction) => {
                 assert!(self.poll.num_forecasters > 0);
@@ -190,6 +194,9 @@ impl<'info> UpdatePrediction<'info> {
         assert!(lower_prediction <= 100);
         assert!(upper_prediction <= 100);
         assert!(lower_prediction <= upper_prediction);
+        if !self.poll.open {
+            return err!(CustomErrorCode::PollClosed);
+        }
         self.user_prediction.lower_prediction = lower_prediction;
         self.user_prediction.upper_prediction = upper_prediction;
         msg!("Updated user prediction");

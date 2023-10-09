@@ -1,5 +1,6 @@
 use std::collections::BTreeMap;
 
+use crate::errors::*;
 use crate::states::*;
 use crate::utils::*;
 use anchor_lang::prelude::*;
@@ -47,6 +48,9 @@ pub struct RemovePrediction<'info> {
 
 impl<'info> RemovePrediction<'info> {
     pub fn remove_prediction(&mut self, bumps: &BTreeMap<String, u8>) -> Result<()> {
+        if !self.poll.open {
+            return err!(CustomErrorCode::PollClosed);
+        }
         match self.poll.crowd_prediction {
             Some(crowd_prediction) => {
                 assert!(self.poll.num_forecasters > 0);

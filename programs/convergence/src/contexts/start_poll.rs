@@ -29,6 +29,7 @@ impl<'info> StartPoll<'info> {
     pub fn start_poll(&mut self) -> Result<()> {
         let current_slot = Clock::get().unwrap().slot;
         self.poll.start_slot = current_slot;
+        self.poll.open = true;
         self.scoring_list.initialize_scoring_list(current_slot);
         msg!("Started poll");
         Ok(())
