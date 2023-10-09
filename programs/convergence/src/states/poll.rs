@@ -10,6 +10,7 @@ pub struct Poll {
     pub question: String,
     pub description: String,
     pub start_slot: u64,
+    pub end_slot: u64,
     pub end_time: Option<u64>,
     pub crowd_prediction: Option<u32>,
     pub num_forecasters: u64,
@@ -30,7 +31,7 @@ impl Poll {
             + question.len()
             + description.len()
             + 2 * OPTION_L
-            + 4 * U64_L
+            + 5 * U64_L
             + U32_L
             + F32_L
             + OPTION_L
@@ -53,6 +54,7 @@ impl Poll {
             question,
             description,
             start_slot: 0,
+            end_slot: 0,
             end_time,
             crowd_prediction: None,
             num_forecasters: 0,

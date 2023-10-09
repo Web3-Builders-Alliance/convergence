@@ -27,6 +27,7 @@ pub struct StartPoll<'info> {
 
 impl<'info> StartPoll<'info> {
     pub fn start_poll(&mut self) -> Result<()> {
+        assert!(self.poll.start_slot == 0);
         let current_slot = Clock::get().unwrap().slot;
         self.poll.start_slot = current_slot;
         self.poll.open = true;
