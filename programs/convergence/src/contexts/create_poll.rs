@@ -38,6 +38,7 @@ impl<'info> CreatePoll<'info> {
     ) -> Result<()> {
         self.poll.set_inner(Poll::new(
             *self.creator.key,
+            *self.creator.key,
             question,
             description,
             end_time,

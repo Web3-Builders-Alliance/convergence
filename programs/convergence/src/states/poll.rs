@@ -5,6 +5,7 @@ use crate::constants::*;
 #[account]
 pub struct Poll {
     pub creator: Pubkey,
+    pub resolver: Pubkey,
     pub question: String,
     pub description: String,
     pub start_slot: u64,
@@ -21,6 +22,7 @@ impl Poll {
 
     pub fn len(question: &str, description: &str) -> usize {
         8 + PUBKEY_L
+            + PUBKEY_L
             + 2 * STRING_L
             + question.len()
             + description.len()
@@ -33,6 +35,7 @@ impl Poll {
 
     pub fn new(
         creator: Pubkey,
+        resolver: Pubkey,
         question: String,
         description: String,
         end_time: Option<u64>,
@@ -40,6 +43,7 @@ impl Poll {
     ) -> Self {
         Self {
             creator,
+            resolver,
             question,
             description,
             start_slot: 0,
