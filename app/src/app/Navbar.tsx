@@ -1,8 +1,17 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import Image from "next/image";
 import React, { useState } from "react";
+
+require("@solana/wallet-adapter-react-ui/styles.css");
+
+const WalletMultiButtonDynamic = dynamic(
+  async () =>
+    (await import("@solana/wallet-adapter-react-ui")).WalletMultiButton,
+  { ssr: false }
+);
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -57,14 +66,9 @@ const Navbar = () => {
           </div>
 
           <div className="flex items-center gap-4">
-            <div className="sm:flex sm:gap-4">
-              <Link
-                className="rounded-md bg-teal-600 px-5 py-2.5 text-sm font-medium text-white shadow"
-                href="/"
-              >
-                Connect Wallet
-              </Link>
-            </div>
+            {/* <div className="sm:flex sm:gap-4"> */}
+            <WalletMultiButtonDynamic className="text-lg mr-6 bg-red-500 hover:bg-green-600" />
+            {/* </div> */}
 
             <div className="block md:hidden">
               <button

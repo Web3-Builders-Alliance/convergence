@@ -26,3 +26,11 @@ body {
     )
     rgb(var(--background-start-rgb));
 }
+
+.wallet-adapter-button:not([disabled]):hover {
+  background-color: #505050;
+}
+
+.wallet-adapter-button:not([disabled]) {
+  background-color: #707070;
+}
