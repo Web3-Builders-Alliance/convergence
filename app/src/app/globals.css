@@ -17,6 +17,7 @@
 }
 
 body {
+  overscroll-behavior-y: none;
   color: rgb(var(--foreground-rgb));
   background: linear-gradient(
       to bottom,
