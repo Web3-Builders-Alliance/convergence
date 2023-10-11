@@ -3,6 +3,7 @@ import { Program } from "@coral-xyz/anchor";
 import { Convergence } from "../target/types/convergence";
 import { expect, use } from "chai";
 import { Keypair, LAMPORTS_PER_SOL } from "@solana/web3.js";
+import { createHash } from "crypto";
 
 const confirmTx = async (signature: string) => {
   const latestBlockhash = await anchor
@@ -28,6 +29,10 @@ describe("convergence", () => {
   const result = true;
   const question = "First question";
   const description = "Describe exactly when it will resolve to true";
+
+  const hexString = createHash("sha256").update(question, "utf8").digest("hex");
+  const questionSeed = Uint8Array.from(Buffer.from(hexString, "hex"));
+
   const startTime = new Date().getTime();
   const endTime = startTime + 1000 * 60 * 60 * 24 * 7;
 
@@ -80,7 +85,7 @@ describe("convergence", () => {
 
   it("creates poll!", async () => {
     let [pollAddress, pollBump] = anchor.web3.PublicKey.findProgramAddressSync(
-      [Buffer.from("poll"), Buffer.from(question)],
+      [Buffer.from("poll"), questionSeed],
       program.programId
     );
 
@@ -116,7 +121,7 @@ describe("convergence", () => {
 
   it("starts poll!", async () => {
     let [pollAddress, _pollBump] = anchor.web3.PublicKey.findProgramAddressSync(
-      [Buffer.from("poll"), Buffer.from(question)],
+      [Buffer.from("poll"), questionSeed],
       program.programId
     );
 
@@ -150,7 +155,7 @@ describe("convergence", () => {
 
   it("makes a prediction!", async () => {
     let [pollAddress, pollBump] = anchor.web3.PublicKey.findProgramAddressSync(
-      [Buffer.from("poll"), Buffer.from(question)],
+      [Buffer.from("poll"), questionSeed],
       program.programId
     );
 
@@ -258,7 +263,7 @@ describe("convergence", () => {
 
   it("updates crowd prediction when user makes prediction!", async () => {
     let [pollAddress, _pollBump] = anchor.web3.PublicKey.findProgramAddressSync(
-      [Buffer.from("poll"), Buffer.from(question)],
+      [Buffer.from("poll"), questionSeed],
       program.programId
     );
     let pollAccount = await program.account.poll.fetch(pollAddress);
@@ -404,7 +409,7 @@ describe("convergence", () => {
 
   it("updates crowd prediction when user updates own prediction!", async () => {
     let [pollAddress, _pollBump] = anchor.web3.PublicKey.findProgramAddressSync(
-      [Buffer.from("poll"), Buffer.from(question)],
+      [Buffer.from("poll"), questionSeed],
       program.programId
     );
     let pollAccount = await program.account.poll.fetch(pollAddress);
@@ -529,7 +534,7 @@ describe("convergence", () => {
 
   it("updates crowd prediction when user removes own prediction!", async () => {
     let [pollAddress, _pollBump] = anchor.web3.PublicKey.findProgramAddressSync(
-      [Buffer.from("poll"), Buffer.from(question)],
+      [Buffer.from("poll"), questionSeed],
       program.programId
     );
     let pollAccount = await program.account.poll.fetch(pollAddress);
@@ -618,7 +623,7 @@ describe("convergence", () => {
 
   it("removes crowd prediction when every user removes own prediction!", async () => {
     let [pollAddress, _pollBump] = anchor.web3.PublicKey.findProgramAddressSync(
-      [Buffer.from("poll"), Buffer.from(question)],
+      [Buffer.from("poll"), questionSeed],
       program.programId
     );
     let pollAccount = await program.account.poll.fetch(pollAddress);
@@ -703,7 +708,7 @@ describe("convergence", () => {
 
   it("can make again a prediction after removing it!", async () => {
     let [pollAddress, _pollBump] = anchor.web3.PublicKey.findProgramAddressSync(
-      [Buffer.from("poll"), Buffer.from(question)],
+      [Buffer.from("poll"), questionSeed],
       program.programId
     );
     let pollAccount = await program.account.poll.fetch(pollAddress);
@@ -812,7 +817,7 @@ describe("convergence", () => {
 
   it("resolves poll!", async () => {
     let [pollAddress, _pollBump] = anchor.web3.PublicKey.findProgramAddressSync(
-      [Buffer.from("poll"), Buffer.from(question)],
+      [Buffer.from("poll"), questionSeed],
       program.programId
     );
 
@@ -859,7 +864,7 @@ describe("convergence", () => {
 
   it("collects points!", async () => {
     let [pollAddress, _pollBump] = anchor.web3.PublicKey.findProgramAddressSync(
-      [Buffer.from("poll"), Buffer.from(question)],
+      [Buffer.from("poll"), questionSeed],
       program.programId
     );
     let pollAccount = await program.account.poll.fetch(pollAddress);

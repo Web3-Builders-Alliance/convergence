@@ -12,7 +12,7 @@ pub struct CreatePoll<'info> {
     #[account(
         init,
         payer = creator,
-        seeds=[Poll::SEED_PREFIX.as_bytes(), question.as_bytes()],
+        seeds=[Poll::SEED_PREFIX.as_bytes(), &anchor_lang::solana_program::hash::hash(question.as_bytes()).to_bytes()],
         space=Poll::len(&question, &description),
         bump
     )]

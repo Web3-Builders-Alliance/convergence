@@ -11,7 +11,7 @@ pub struct RemovePrediction<'info> {
     pub forecaster: Signer<'info>,
     #[account(
       mut,
-      seeds=[Poll::SEED_PREFIX.as_bytes(), poll.question.as_bytes()],
+      seeds=[Poll::SEED_PREFIX.as_bytes(), &anchor_lang::solana_program::hash::hash(poll.question.as_bytes()).to_bytes()],
       bump=poll.bump
     )]
     pub poll: Account<'info, Poll>,
