@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@coral-xyz/anchor": "^0.28.1-beta.2",
     "@headlessui/react": "^1.7.17",
     "@solana/wallet-adapter-base": "^0.9.23",
     "@solana/wallet-adapter-react": "^0.15.35",
@@ -30,6 +31,7 @@
     "react-dom": "18.2.0",
     "react-hot-toast": "^2.4.1",
     "tailwindcss": "3.3.3",
-    "typescript": "5.2.2"
+    "typescript": "5.2.2",
+    "zustand": "^4.4.3"
   }
 }
