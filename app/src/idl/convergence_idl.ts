@@ -311,7 +311,7 @@ export type Convergence = {
   ];
   accounts: [
     {
-      name: "Poll";
+      name: "poll";
       type: {
         kind: "struct";
         fields: [
@@ -507,7 +507,7 @@ export type Convergence = {
       };
     },
     {
-      name: "User";
+      name: "user";
       type: {
         kind: "struct";
         fields: [
@@ -853,7 +853,7 @@ export const IDL: Convergence = {
   ],
   accounts: [
     {
-      name: "Poll",
+      name: "poll",
       type: {
         kind: "struct",
         fields: [
@@ -1049,7 +1049,7 @@ export const IDL: Convergence = {
       },
     },
     {
-      name: "User",
+      name: "user",
       type: {
         kind: "struct",
         fields: [

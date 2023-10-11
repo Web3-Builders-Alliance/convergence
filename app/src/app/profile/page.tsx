@@ -11,6 +11,7 @@ import { RequestAirdrop } from "./RequestAirdrop";
 import { RegisterUser } from "./RegisterUser";
 import useUserAccountStore from "@/stores/useUserAccountStore";
 import { CreatePoll } from "./CreatePoll";
+import usePollStore from "@/stores/usePollStore";
 
 function classNames(...classes: string[]) {
   return classes.filter(Boolean).join(" ");
@@ -25,10 +26,27 @@ export default function Profile() {
 
   const { getUserAccount, isRegistered, score } = useUserAccountStore();
 
+  const { getPolls, allPolls, onwPolls, livePolls, pastPolls } = usePollStore();
+
+  console.log(
+    "all Polls",
+    allPolls.map((poll) => poll.creator.toBase58())
+  );
+  console.log("live Polls", livePolls);
+  console.log("own Polls", onwPolls);
+  console.log("past Polls", pastPolls);
+
   useEffect(() => {
     getUserSOLBalance(connection, wallet.publicKey);
     getUserAccount(connection, wallet.publicKey);
-  }, [wallet.publicKey, connection, getUserSOLBalance, getUserAccount]);
+    getPolls(wallet.publicKey);
+  }, [
+    wallet.publicKey,
+    connection,
+    getUserSOLBalance,
+    getUserAccount,
+    getPolls,
+  ]);
 
   let [categories] = useState({
     "Past Polls": [

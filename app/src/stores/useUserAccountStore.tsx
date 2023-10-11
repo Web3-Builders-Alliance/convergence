@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { Connection, PublicKey, LAMPORTS_PER_SOL } from "@solana/web3.js";
+import { Connection, PublicKey } from "@solana/web3.js";
 import { Idl, Program } from "@coral-xyz/anchor";
 import { Convergence, IDL } from "@/idl/convergence_idl";
 import { programId } from "@/utils/anchor";

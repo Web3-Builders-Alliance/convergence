@@ -16,7 +16,7 @@ import toast from "react-hot-toast";
 export const CreatePoll: FC = () => {
   const { connection } = useConnection();
   const { publicKey, sendTransaction } = useWallet();
-  const [isOpen, setIsOpen] = useState(true);
+  const [isOpen, setIsOpen] = useState(false);
   const [question, setQuestion] = useState("");
   const [description, setDescription] = useState("");
 
