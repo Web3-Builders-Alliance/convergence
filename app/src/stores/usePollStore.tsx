@@ -29,10 +29,10 @@ type Poll = {
 };
 
 type PollStore = {
-  allPolls: any[];
-  livePolls: any[];
-  onwPolls: any[];
-  pastPolls: any[];
+  allPolls: Poll[];
+  livePolls: Poll[];
+  onwPolls: Poll[];
+  pastPolls: Poll[];
   getPolls: (publicKey: PublicKey | null) => void;
 };
 

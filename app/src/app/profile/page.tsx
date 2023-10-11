@@ -13,6 +13,7 @@ import useUserAccountStore from "@/stores/useUserAccountStore";
 import { CreatePoll } from "./CreatePoll";
 import usePollStore from "@/stores/usePollStore";
 import { StartPoll } from "./StartPoll";
+import { ResolvePoll } from "./ResolvePoll";
 
 function classNames(...classes: string[]) {
   return classes.filter(Boolean).join(" ");
@@ -89,7 +90,7 @@ export default function Profile() {
                   "ring-white ring-opacity-60 ring-offset-2 ring-offset-blue-400 focus:outline-none focus:ring-2"
                 )}
               >
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {polls.map((poll) => {
                     const hasStarted = poll.startSlot.toNumber() > 0;
                     const hasResolved = poll.result !== null;
@@ -109,7 +110,7 @@ export default function Profile() {
                                 This market has been resolved
                               </div>
                             ) : (
-                              "Resolve"
+                              <ResolvePoll question={poll.question} />
                             )
                           ) : (
                             <StartPoll question={poll.question} />
