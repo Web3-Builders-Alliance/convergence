@@ -12,6 +12,7 @@ import { RegisterUser } from "./RegisterUser";
 import useUserAccountStore from "@/stores/useUserAccountStore";
 import { CreatePoll } from "./CreatePoll";
 import usePollStore from "@/stores/usePollStore";
+import { StartPoll } from "./StartPoll";
 
 function classNames(...classes: string[]) {
   return classes.filter(Boolean).join(" ");
@@ -26,15 +27,7 @@ export default function Profile() {
 
   const { getUserAccount, isRegistered, score } = useUserAccountStore();
 
-  const { getPolls, allPolls, onwPolls, livePolls, pastPolls } = usePollStore();
-
-  console.log(
-    "all Polls",
-    allPolls.map((poll) => poll.creator.toBase58())
-  );
-  console.log("live Polls", livePolls);
-  console.log("own Polls", onwPolls);
-  console.log("past Polls", pastPolls);
+  const { getPolls, onwPolls, livePolls, pastPolls } = usePollStore();
 
   useEffect(() => {
     getUserSOLBalance(connection, wallet.publicKey);
@@ -48,70 +41,13 @@ export default function Profile() {
     getPolls,
   ]);
 
-  let [categories] = useState({
-    "Past Polls": [
-      {
-        id: 1,
-        title: "Does drinking coffee make you smarter?",
-        date: "5h ago",
-        commentCount: 5,
-        shareCount: 2,
-      },
-      {
-        id: 2,
-        title: "So you've bought coffee... now what?",
-        date: "2h ago",
-        commentCount: 3,
-        shareCount: 2,
-      },
-      {
-        id: 3,
-        title: "Does drinking coffee make you smarter?",
-        date: "5h ago",
-        commentCount: 5,
-        shareCount: 2,
-      },
-      {
-        id: 4,
-        title: "So you've bought coffee... now what?",
-        date: "2h ago",
-        commentCount: 3,
-        shareCount: 2,
-      },
-    ],
-    "Live Polls": [
-      {
-        id: 1,
-        title: "Is tech making coffee better or worse?",
-        date: "Jan 7",
-        commentCount: 29,
-        shareCount: 16,
-      },
-      {
-        id: 2,
-        title: "The most innovative things happening in coffee",
-        date: "Mar 19",
-        commentCount: 24,
-        shareCount: 12,
-      },
-    ],
-    "Own Polls": [
-      {
-        id: 1,
-        title: "Ask Me Anything: 10 answers to your questions about coffee",
-        date: "2d ago",
-        commentCount: 9,
-        shareCount: 5,
-      },
-      {
-        id: 2,
-        title: "The worst advice we've ever heard about coffee",
-        date: "4d ago",
-        commentCount: 1,
-        shareCount: 2,
-      },
-    ],
-  });
+  let categories = {
+    "Past Polls": pastPolls,
+    "Live Polls": livePolls,
+    "Own Polls": onwPolls,
+  };
+
+  console.log("Own polls", onwPolls);
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-start p-4 sm:p-24">
@@ -145,7 +81,7 @@ export default function Profile() {
             ))}
           </Tab.List>
           <Tab.Panels className="mt-2">
-            {Object.values(categories).map((posts, idx) => (
+            {Object.values(categories).map((polls, idx) => (
               <Tab.Panel
                 key={idx}
                 className={classNames(
@@ -153,34 +89,59 @@ export default function Profile() {
                   "ring-white ring-opacity-60 ring-offset-2 ring-offset-blue-400 focus:outline-none focus:ring-2"
                 )}
               >
-                <ul>
-                  {posts.map((post) => (
-                    <li
-                      key={post.id}
-                      className="relative rounded-md p-3 hover:bg-gray-100"
-                    >
-                      <h3 className="text-sm font-medium leading-5">
-                        {post.title}
-                      </h3>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  {polls.map((poll) => {
+                    const hasStarted = poll.startSlot.toNumber() > 0;
+                    const hasResolved = poll.result !== null;
+                    return (
+                      <div
+                        key={poll.question}
+                        className="flex flex-col h-60 mx-2 border rounded-md p-4"
+                      >
+                        <div className="h-20">{poll.question}</div>
+                        <div className="my-8">
+                          Crowd prediction: {poll.crowdPrediction || "-"}
+                        </div>
+                        {idx === 2 &&
+                          (hasStarted ? (
+                            hasResolved ? (
+                              <div className="text-center p-4 rounded-md border bg-blue-200">
+                                This market has been resolved
+                              </div>
+                            ) : (
+                              "Resolve"
+                            )
+                          ) : (
+                            <StartPoll question={poll.question} />
+                          ))}
+                      </div>
+                      // <li
+                      //   key={poll.question}
+                      //   className="relative rounded-md p-3 hover:bg-gray-100"
+                      // >
+                      //   <h3 className="text-sm font-medium leading-5">
+                      //     {poll.question}
+                      //   </h3>
 
-                      <ul className="mt-1 flex space-x-1 text-xs font-normal leading-4 text-gray-500">
-                        <li>{post.date}</li>
-                        <li>&middot;</li>
-                        <li>{post.commentCount} comments</li>
-                        <li>&middot;</li>
-                        <li>{post.shareCount} shares</li>
-                      </ul>
+                      //   {/* <ul className="mt-1 flex space-x-1 text-xs font-normal leading-4 text-gray-500">
+                      //   <li>{poll.date}</li>
+                      //   <li>&middot;</li>
+                      //   <li>{poll.commentCount} comments</li>
+                      //   <li>&middot;</li>
+                      //   <li>{poll.shareCount} shares</li>
+                      // </ul> */}
 
-                      <a
-                        href="#"
-                        className={classNames(
-                          "absolute inset-0 rounded-md",
-                          "ring-blue-400 focus:z-10 focus:outline-none focus:ring-2"
-                        )}
-                      />
-                    </li>
-                  ))}
-                </ul>
+                      //   <a
+                      //     href="#"
+                      //     className={classNames(
+                      //       "absolute inset-0 rounded-md",
+                      //       "ring-blue-400 focus:z-10 focus:outline-none focus:ring-2"
+                      //     )}
+                      //   />
+                      // </li>
+                    );
+                  })}
+                </div>
               </Tab.Panel>
             ))}
           </Tab.Panels>

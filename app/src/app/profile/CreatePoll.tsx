@@ -1,4 +1,5 @@
 import { Convergence, IDL } from "@/idl/convergence_idl";
+import usePollStore from "@/stores/usePollStore";
 import { programId } from "@/utils/anchor";
 import { Idl, Program } from "@coral-xyz/anchor";
 import { Dialog, Transition } from "@headlessui/react";
@@ -19,6 +20,8 @@ export const CreatePoll: FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [question, setQuestion] = useState("");
   const [description, setDescription] = useState("");
+
+  const { getPolls } = usePollStore();
 
   const closeModal = () => {
     setIsOpen(false);
@@ -87,6 +90,7 @@ export const CreatePoll: FC = () => {
       );
 
       console.log(signature);
+      getPolls(publicKey);
       toast.success("Transaction successful!");
     } catch (error: any) {
       toast.error("Transaction failed!: " + error?.message);
@@ -95,7 +99,7 @@ export const CreatePoll: FC = () => {
     } finally {
       closeModal();
     }
-  }, [publicKey, connection, sendTransaction, description, question]);
+  }, [publicKey, connection, sendTransaction, description, question, getPolls]);
 
   return (
     <>

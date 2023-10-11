@@ -30,7 +30,7 @@ const useUserAccountStore = create<UserAccountStore>((set, _get) => ({
         const userAccount = await connection.getAccountInfo(userAccountPda);
         if (userAccount) {
           const user = await program.account.user.fetch(userAccountPda);
-          console.log("User", user);
+
           isRegistered = true;
           score = user.score;
         } else {
