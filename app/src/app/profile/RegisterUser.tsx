@@ -11,6 +11,7 @@ import {
 } from "@solana/web3.js";
 import { FC, useCallback, useState } from "react";
 import toast from "react-hot-toast";
+import { ImSpinner2 } from "react-icons/im";
 
 export const RegisterUser: FC = () => {
   const { connection } = useConnection();
@@ -35,8 +36,7 @@ export const RegisterUser: FC = () => {
       program.programId
     );
 
-    console.log("User account", userAccount);
-
+    setIsLoading(true);
     let signature: TransactionSignature = "";
     try {
       const registerUserInstruction = await program.methods
@@ -74,21 +74,24 @@ export const RegisterUser: FC = () => {
       toast.error("Transaction failed!: " + error?.message);
       console.log("error", `Transaction failed! ${error?.message}`, signature);
       return;
+    } finally {
+      setIsLoading(false);
     }
   }, [publicKey, connection, sendTransaction, getUserAccount]);
 
   return (
     <button
-      className="px-2 bg-gradient-to-br rounded-md from-indigo-500/50 to-fuchsia-500/50 disabled:from-gray-400 disabled:to-gray-400 enabled:hover:from-white enabled:hover:to-purple-300 text-black text-xs"
+      className="shadow rounded-md px-6 py-4 enabled:bg-blue-400 enabled:hover:brightness-110 enabled:hover:cursor-pointer disabled:bg-blue-200"
       onClick={onClick}
       disabled={isLoading}
     >
       {isLoading ? (
-        <span className="animate-pulse">Loading...</span>
+        <span className="animate-pulse">
+          <ImSpinner2 className="inline mr-2 animate-spin text-sm" />
+          Loading...
+        </span>
       ) : (
-        <div className="shadow rounded-md px-6 py-4 bg-blue-400 hover:brightness-110 hover:cursor-pointer">
-          Register User
-        </div>
+        <div className="">Register User</div>
       )}
     </button>
   );

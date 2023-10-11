@@ -10,6 +10,7 @@ import useUserSOLBalanceStore from "@/stores/useUserSOLBalanceStore";
 import { RequestAirdrop } from "./RequestAirdrop";
 import { RegisterUser } from "./RegisterUser";
 import useUserAccountStore from "@/stores/useUserAccountStore";
+import { CreatePoll } from "./CreatePoll";
 
 function classNames(...classes: string[]) {
   return classes.filter(Boolean).join(" ");
@@ -40,6 +41,20 @@ export default function Profile() {
       },
       {
         id: 2,
+        title: "So you've bought coffee... now what?",
+        date: "2h ago",
+        commentCount: 3,
+        shareCount: 2,
+      },
+      {
+        id: 3,
+        title: "Does drinking coffee make you smarter?",
+        date: "5h ago",
+        commentCount: 5,
+        shareCount: 2,
+      },
+      {
+        id: 4,
         title: "So you've bought coffee... now what?",
         date: "2h ago",
         commentCount: 3,
@@ -87,10 +102,10 @@ export default function Profile() {
           <div>Score: {score.toFixed(2)}</div>
           <div>
             <div>Balance: {balance.toFixed(4)} SOL</div>
-            {balance < 0.5 && <RequestAirdrop />}
+            {balance < 10.5 && <RequestAirdrop />}
           </div>
         </div>
-        {isRegistered ? <div>Create market</div> : <RegisterUser />}
+        {isRegistered ? <CreatePoll /> : <RegisterUser />}
       </div>
       <div className="w-full px-2 py-16 sm:px-0">
         <Tab.Group>

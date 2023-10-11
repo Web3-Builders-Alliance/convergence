@@ -507,7 +507,7 @@ export type Convergence = {
       };
     },
     {
-      name: "user";
+      name: "User";
       type: {
         kind: "struct";
         fields: [
@@ -1049,7 +1049,7 @@ export const IDL: Convergence = {
       },
     },
     {
-      name: "user",
+      name: "User",
       type: {
         kind: "struct",
         fields: [
