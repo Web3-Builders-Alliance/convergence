@@ -1,9 +1,15 @@
 "use client";
 import { useEffect, useState } from "react";
 import { Tab } from "@headlessui/react";
-import { useConnection, useWallet } from "@solana/wallet-adapter-react";
+import {
+  useAnchorWallet,
+  useConnection,
+  useWallet,
+} from "@solana/wallet-adapter-react";
 import useUserSOLBalanceStore from "@/stores/useUserSOLBalanceStore";
 import { RequestAirdrop } from "./RequestAirdrop";
+import { RegisterUser } from "./RegisterUser";
+import useUserAccountStore from "@/stores/useUserAccountStore";
 
 function classNames(...classes: string[]) {
   return classes.filter(Boolean).join(" ");
@@ -16,9 +22,12 @@ export default function Profile() {
   const balance = useUserSOLBalanceStore((s) => s.balance);
   const { getUserSOLBalance } = useUserSOLBalanceStore();
 
+  const { getUserAccount, isRegistered, score } = useUserAccountStore();
+
   useEffect(() => {
     getUserSOLBalance(connection, wallet.publicKey);
-  }, [wallet.publicKey, connection, getUserSOLBalance]);
+    getUserAccount(connection, wallet.publicKey);
+  }, [wallet.publicKey, connection, getUserSOLBalance, getUserAccount]);
 
   let [categories] = useState({
     "Past Polls": [
@@ -75,15 +84,13 @@ export default function Profile() {
     <main className="flex min-h-screen flex-col items-center justify-start p-4 sm:p-24">
       <div className="flex self-start gap-4 md:gap-16 items-start">
         <div className="flex flex-col items-start rounded-md border border-black py-4 px-6 gap-4">
-          <div>Score: 0</div>
+          <div>Score: {score.toFixed(2)}</div>
           <div>
-            <div>Balance: {balance} SOL</div>
+            <div>Balance: {balance.toFixed(4)} SOL</div>
             {balance < 0.5 && <RequestAirdrop />}
           </div>
         </div>
-        <div className="shadow rounded-md px-6 py-4 bg-blue-400 hover:brightness-110 hover:cursor-pointer">
-          Register User
-        </div>
+        {isRegistered ? <div>Create market</div> : <RegisterUser />}
       </div>
       <div className="w-full px-2 py-16 sm:px-0">
         <Tab.Group>

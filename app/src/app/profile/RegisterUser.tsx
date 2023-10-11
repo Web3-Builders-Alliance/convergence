@@ -1,9 +1,10 @@
-import { program } from "@/utils/anchor";
+import { Convergence, IDL } from "@/idl/convergence_idl";
+import useUserAccountStore from "@/stores/useUserAccountStore";
+import { programId } from "@/utils/anchor";
+import { Idl, Program } from "@coral-xyz/anchor";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import {
-  Keypair,
   PublicKey,
-  SystemProgram,
   TransactionMessage,
   TransactionSignature,
   VersionedTransaction,
@@ -15,6 +16,7 @@ export const RegisterUser: FC = () => {
   const { connection } = useConnection();
   const { publicKey, sendTransaction } = useWallet();
   const [isLoading, setIsLoading] = useState(false);
+  const { getUserAccount } = useUserAccountStore();
 
   const onClick = useCallback(async () => {
     if (!publicKey) {
@@ -23,10 +25,17 @@ export const RegisterUser: FC = () => {
       return;
     }
 
+    const program = new Program(
+      IDL as Idl,
+      programId
+    ) as unknown as Program<Convergence>;
+
     let [userAccount] = PublicKey.findProgramAddressSync(
       [Buffer.from("user"), publicKey.toBuffer()],
       program.programId
     );
+
+    console.log("User account", userAccount);
 
     let signature: TransactionSignature = "";
     try {
@@ -59,12 +68,14 @@ export const RegisterUser: FC = () => {
 
       console.log(signature);
       toast.success("Transaction successful!");
+
+      getUserAccount(connection, publicKey);
     } catch (error: any) {
-      toast.error("Transaction failed!" + error?.message);
+      toast.error("Transaction failed!: " + error?.message);
       console.log("error", `Transaction failed! ${error?.message}`, signature);
       return;
     }
-  }, [publicKey, connection, sendTransaction]);
+  }, [publicKey, connection, sendTransaction, getUserAccount]);
 
   return (
     <button

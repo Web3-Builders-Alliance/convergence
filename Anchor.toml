@@ -1,14 +1,14 @@
 [features]
 seeds = false
 skip-lint = false
-[programs.localnet]
+[programs.devnet]
 convergence = "4irSQbid9JUAkhUf5yhnx5o3EgaY3saAErK9oQtPURHo"
 
 [registry]
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "Localnet"
+cluster = "Devnet"
 wallet = "/Users/thomas/.config/solana/id.json"
 
 [scripts]

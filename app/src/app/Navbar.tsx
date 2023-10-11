@@ -3,7 +3,9 @@
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import Image from "next/image";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { useAnchorWallet, useConnection } from "@solana/wallet-adapter-react";
+import { AnchorProvider, setProvider } from "@coral-xyz/anchor";
 
 require("@solana/wallet-adapter-react-ui/styles.css");
 
@@ -15,6 +17,15 @@ const WalletMultiButtonDynamic = dynamic(
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { connection } = useConnection();
+  const wallet = useAnchorWallet();
+
+  useEffect(() => {
+    if (wallet) {
+      const provider = new AnchorProvider(connection, wallet, {});
+      setProvider(provider);
+    }
+  }, [wallet, connection]);
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
