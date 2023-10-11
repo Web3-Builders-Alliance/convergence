@@ -10,23 +10,7 @@ import {
 } from "@coral-xyz/anchor";
 import { Convergence, IDL } from "@/idl/convergence_idl";
 import { programId } from "@/utils/anchor";
-
-type Poll = {
-  creator: PublicKey;
-  resolver: PublicKey;
-  open: boolean;
-  accumulatedWeights: number;
-  crowdPrediction: number | null;
-  question: string;
-  description: string;
-  result: boolean | null;
-  startSlot: BN;
-  endSlot: BN;
-  numForecasters: BN;
-  numPredictionUpdates: BN;
-  endTime: BN | null;
-  bump: number;
-};
+import { Poll } from "@/types/program_types";
 
 type PollStore = {
   allPolls: Poll[];

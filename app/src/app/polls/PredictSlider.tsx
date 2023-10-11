@@ -10,19 +10,25 @@ import {
   VersionedTransaction,
 } from "@solana/web3.js";
 import { createHash } from "crypto";
-import { FC, useCallback, useState } from "react";
+import { ChangeEvent, FC, useCallback, useState } from "react";
 import toast from "react-hot-toast";
 
 type StartPollProps = {
   question: string;
+  prediction: string;
+  onChange: (value: string) => void;
 };
 
-export const ResolvePoll: FC<StartPollProps> = ({
+export const PredictSlider: FC<StartPollProps> = ({
   question,
+  prediction,
+  onChange,
 }: StartPollProps) => {
   const { connection } = useConnection();
   const { publicKey, sendTransaction } = useWallet();
   const [isLoading, setIsLoading] = useState(false);
+
+  const [oldPrediction] = useState(prediction);
 
   const { getPolls } = usePollStore();
 
@@ -103,25 +109,19 @@ export const ResolvePoll: FC<StartPollProps> = ({
   );
 
   return (
-    <div className="flex flex-col items-center">
-      <div className="mb-2 underline">Resolve poll</div>
-      <div className="flex justify-between items-center gap-2">
-        <button
-          className="shadow rounded-md px-6 py-4 bg-green-200 enabled:hover:brightness-110 enabled:hover:cursor-pointer"
-          onClick={() => onClick(true)}
-          disabled={isLoading}
-        >
-          <div className="">Yes</div>
-        </button>
-        <div className="mx-2 text-center">Did it happen?</div>
-        <button
-          className="shadow rounded-md px-6 py-4 bg-red-200 enabled:hover:brightness-110 enabled:hover:cursor-pointer"
-          onClick={() => onClick(true)}
-          disabled={isLoading}
-        >
-          <div className="">No</div>
-        </button>
-      </div>
+    <div className="flex items-center">
+      <input
+        type="range"
+        min="0"
+        max="100"
+        value={prediction}
+        onChange={(e) => onChange(e.target.value)}
+        className="slider appearance-none h-4 bg-gray-300 rounded-full"
+      />
+
+      {/* <span className="ml-2">{prediction}</span> */}
+      <button onClick={() => onChange(oldPrediction)}>Reset</button>
+      <button onClick={() => onChange(oldPrediction)}>Submit</button>
     </div>
   );
 };

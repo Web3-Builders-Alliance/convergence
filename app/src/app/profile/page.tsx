@@ -97,7 +97,7 @@ export default function Profile() {
                     return (
                       <div
                         key={poll.question}
-                        className="flex flex-col h-60 mx-2 border rounded-md p-4"
+                        className="flex flex-col mx-2 border rounded-md p-4"
                       >
                         <div className="h-20">{poll.question}</div>
                         <div className="my-8">
