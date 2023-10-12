@@ -60,11 +60,14 @@ export const PredictSlider: FC<StartPollProps> = ({
       : 50
   );
 
-  const intervalLength = (prediction: number) => {
-    return Math.min(100 - prediction, prediction, 10);
+  const intervalLength = (prediction: number, length: number) => {
+    return Math.min(100 - prediction, prediction, Math.round(length / 2));
   };
 
   const { getPolls } = usePollStore();
+
+  console.log("lower", userLowerPrediction);
+  console.log("upper", userUpperPrediction);
 
   const onClick = useCallback(
     async (result: boolean) => {
@@ -164,6 +167,32 @@ export const PredictSlider: FC<StartPollProps> = ({
                 setUserLowerPrediction(sliderRange[0]);
                 setUserUpperPrediction(sliderRange[0]);
               } else {
+                if (sliderRange[1] === prediction) {
+                  const interval = sliderRange[2] - sliderRange[0];
+                  setUserLowerPrediction(
+                    prediction - intervalLength(prediction, interval)
+                  );
+                  setUserUpperPrediction(
+                    prediction + intervalLength(prediction, interval)
+                  );
+                  onChange(
+                    prediction - intervalLength(prediction, interval),
+                    prediction + intervalLength(prediction, interval)
+                  );
+                } else {
+                  const interval = sliderRange[2] - sliderRange[0];
+                  setUserLowerPrediction(
+                    sliderRange[1] - intervalLength(sliderRange[1], interval)
+                  );
+                  setUserUpperPrediction(
+                    sliderRange[1] + intervalLength(sliderRange[1], interval)
+                  );
+                  setPrediction(sliderRange[1]);
+                  onChange(
+                    sliderRange[1] - intervalLength(sliderRange[1], interval),
+                    sliderRange[1] + intervalLength(sliderRange[1], interval)
+                  );
+                }
               }
             }}
             orientation="horizontal"
@@ -224,21 +253,21 @@ export const PredictSlider: FC<StartPollProps> = ({
               if (value) {
                 setUserLowerPrediction(
                   userLowerPrediction !== null
-                    ? userLowerPrediction - intervalLength(prediction)
-                    : 50 - intervalLength(50)
+                    ? userLowerPrediction - intervalLength(prediction, 20)
+                    : 50 - intervalLength(50, 20)
                 );
                 setUserUpperPrediction(
                   userUpperPrediction !== null
-                    ? userUpperPrediction + intervalLength(prediction)
-                    : 50 + intervalLength(50)
+                    ? userUpperPrediction + intervalLength(prediction, 20)
+                    : 50 + intervalLength(50, 20)
                 );
                 onChange(
                   userLowerPrediction !== null
-                    ? userLowerPrediction - intervalLength(prediction)
-                    : 50 - intervalLength(50),
+                    ? userLowerPrediction - intervalLength(prediction, 20)
+                    : 50 - intervalLength(50, 20),
                   userUpperPrediction !== null
-                    ? userUpperPrediction + intervalLength(prediction)
-                    : 50 + intervalLength(50)
+                    ? userUpperPrediction + intervalLength(prediction, 20)
+                    : 50 + intervalLength(50, 20)
                 );
               } else {
                 setUserLowerPrediction(prediction);

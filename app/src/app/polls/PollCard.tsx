@@ -14,9 +14,8 @@ type PollProps = {
 const PollCard: FC<PollProps> = ({ poll }) => {
   const { publicKey } = useWallet();
   const { connection } = useConnection();
-  const [userPredicion, setUserPrediction] = useState("-");
-  const [lowerPrediction, setLowerPrediction] = useState<number | null>(20);
-  const [upperPrediction, setUpperPrediction] = useState<number | null>(40);
+  const [lowerPrediction, setLowerPrediction] = useState<number | null>(null);
+  const [upperPrediction, setUpperPrediction] = useState<number | null>(null);
 
   const handleChange = (lower: number | null, upper: number | null) => {
     setLowerPrediction(lower);
