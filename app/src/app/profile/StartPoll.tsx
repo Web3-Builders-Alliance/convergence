@@ -56,7 +56,7 @@ export const StartPoll: FC<StartPollProps> = ({ question }: StartPollProps) => {
     setIsLoading(true);
     let signature: TransactionSignature = "";
     try {
-      const registerUserInstruction = await program.methods
+      const startPollInstruction = await program.methods
         .startPoll()
         .accounts({ poll: pollAccount, scoringList: scoreListAccount })
         .instruction();
@@ -68,7 +68,7 @@ export const StartPoll: FC<StartPollProps> = ({ question }: StartPollProps) => {
       const messageV0 = new TransactionMessage({
         payerKey: publicKey,
         recentBlockhash: latestBlockhash.blockhash,
-        instructions: [registerUserInstruction],
+        instructions: [startPollInstruction],
       }).compileToV0Message();
 
       // Create a new VersionedTransaction to support the v0 message

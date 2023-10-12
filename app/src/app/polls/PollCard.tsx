@@ -2,10 +2,12 @@ import { Poll } from "@/types/program_types";
 import { programId } from "@/utils/anchor";
 import { createHash } from "crypto";
 import { PublicKey } from "@solana/web3.js";
-import { ChangeEvent, FC, useEffect, useState } from "react";
+import { FC, useEffect, useState } from "react";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { PredictSlider } from "./PredictSlider";
 import { FaPlusMinus } from "react-icons/fa6";
+import { Idl, Program } from "@coral-xyz/anchor";
+import { Convergence, IDL } from "@/idl/convergence_idl";
 
 type PollProps = {
   poll: Poll;
@@ -25,6 +27,12 @@ const PollCard: FC<PollProps> = ({ poll }) => {
   useEffect(() => {
     const getUserPrediction = async () => {
       if (!publicKey) return;
+
+      const program = new Program(
+        IDL as Idl,
+        programId
+      ) as unknown as Program<Convergence>;
+
       const hexString = createHash("sha256")
         .update(poll.question, "utf8")
         .digest("hex");
@@ -44,10 +52,18 @@ const PollCard: FC<PollProps> = ({ poll }) => {
         programId
       );
 
-      const predictionAccount = await connection.getAccountInfo(
-        userPredictionPda
-      );
-      console.log("prediction accoutn", predictionAccount);
+      try {
+        const predictionAccount = await program.account.userPrediction.fetch(
+          userPredictionPda
+        );
+        if (predictionAccount) {
+          console.log("prediction account", predictionAccount);
+          setLowerPrediction(predictionAccount.lowerPrediction);
+          setUpperPrediction(predictionAccount.upperPrediction);
+        }
+      } catch (e) {
+        console.log(e);
+      }
     };
     getUserPrediction();
   }, [connection, poll.question, publicKey]);
@@ -59,7 +75,12 @@ const PollCard: FC<PollProps> = ({ poll }) => {
   return (
     <div>
       <div>{poll.question}</div>
-      <div>Crowd prediction: {poll.crowdPrediction || "-"}</div>
+      <div>
+        Crowd prediction:{" "}
+        {poll.crowdPrediction
+          ? (poll.crowdPrediction / 10000).toFixed(2) + "%"
+          : "-"}
+      </div>
       <div className="flex gap-2">
         <div>
           Your prediction:{" "}

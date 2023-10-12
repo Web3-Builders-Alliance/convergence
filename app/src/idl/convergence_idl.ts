@@ -381,7 +381,7 @@ export type Convergence = {
       };
     },
     {
-      name: "PredictionUpdate";
+      name: "predictionUpdate";
       type: {
         kind: "struct";
         fields: [
@@ -407,7 +407,7 @@ export type Convergence = {
       };
     },
     {
-      name: "ScoringList";
+      name: "scoringList";
       type: {
         kind: "struct";
         fields: [
@@ -435,7 +435,7 @@ export type Convergence = {
       };
     },
     {
-      name: "UserPrediction";
+      name: "userPrediction";
       type: {
         kind: "struct";
         fields: [
@@ -459,7 +459,7 @@ export type Convergence = {
       };
     },
     {
-      name: "UserScore";
+      name: "userScore";
       type: {
         kind: "struct";
         fields: [
@@ -923,7 +923,7 @@ export const IDL: Convergence = {
       },
     },
     {
-      name: "PredictionUpdate",
+      name: "predictionUpdate",
       type: {
         kind: "struct",
         fields: [
@@ -949,7 +949,7 @@ export const IDL: Convergence = {
       },
     },
     {
-      name: "ScoringList",
+      name: "scoringList",
       type: {
         kind: "struct",
         fields: [
@@ -977,7 +977,7 @@ export const IDL: Convergence = {
       },
     },
     {
-      name: "UserPrediction",
+      name: "userPrediction",
       type: {
         kind: "struct",
         fields: [
@@ -1001,7 +1001,7 @@ export const IDL: Convergence = {
       },
     },
     {
-      name: "UserScore",
+      name: "userScore",
       type: {
         kind: "struct",
         fields: [

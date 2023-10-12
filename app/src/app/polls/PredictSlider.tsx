@@ -10,7 +10,7 @@ import {
   VersionedTransaction,
 } from "@solana/web3.js";
 import { createHash } from "crypto";
-import { ChangeEvent, FC, useCallback, useState } from "react";
+import { ChangeEvent, FC, useCallback, useRef, useState } from "react";
 import toast from "react-hot-toast";
 import * as Slider from "@radix-ui/react-slider";
 import * as Switch from "@radix-ui/react-switch";
@@ -45,8 +45,14 @@ export const PredictSlider: FC<StartPollProps> = ({
   const [userUpperPrediction, setUserUpperPrediction] =
     useState(upperPrediction);
 
+  console.log("lower", lowerPrediction);
+  console.log("upper", userUpperPrediction);
+
   const [oldLowerPrediction] = useState(lowerPrediction);
   const [oldUpperPrediction] = useState(upperPrediction);
+  // const oldLowerPrediction = lowerPrediction;
+  // const oldUpperPrediction = upperPrediction;
+
   const [oldIsConfidenceInterval] = useState(
     lowerPrediction !== null &&
       upperPrediction !== null &&
@@ -64,86 +70,118 @@ export const PredictSlider: FC<StartPollProps> = ({
     return Math.min(100 - prediction, prediction, Math.round(length / 2));
   };
 
-  const { getPolls } = usePollStore();
+  const makePrediction = useCallback(async () => {
+    if (!publicKey) {
+      toast.error("Wallet not connected!", { position: "top-left" });
+      console.log("error", `Send Transaction: Wallet not connected!`);
+      return;
+    }
 
-  console.log("lower", userLowerPrediction);
-  console.log("upper", userUpperPrediction);
+    const program = new Program(
+      IDL as Idl,
+      programId
+    ) as unknown as Program<Convergence>;
 
-  const onClick = useCallback(
-    async (result: boolean) => {
-      if (!publicKey) {
-        toast.error("Wallet not connected!", { position: "top-left" });
-        console.log("error", `Send Transaction: Wallet not connected!`);
-        return;
-      }
+    let [userPda] = PublicKey.findProgramAddressSync(
+      [Buffer.from("user"), publicKey.toBuffer()],
+      program.programId
+    );
 
-      const program = new Program(
-        IDL as Idl,
-        programId
-      ) as unknown as Program<Convergence>;
+    const hexString = createHash("sha256")
+      .update(question, "utf8")
+      .digest("hex");
+    const questionSeed = Uint8Array.from(Buffer.from(hexString, "hex"));
 
-      const hexString = createHash("sha256")
-        .update(question, "utf8")
-        .digest("hex");
-      const questionSeed = Uint8Array.from(Buffer.from(hexString, "hex"));
+    let [pollPda] = PublicKey.findProgramAddressSync(
+      [Buffer.from("poll"), questionSeed],
+      program.programId
+    );
+    let pollAccount = await program.account.poll.fetch(pollPda);
 
-      let [pollAccount] = PublicKey.findProgramAddressSync(
-        [Buffer.from("poll"), questionSeed],
-        program.programId
+    let [userPredictionPda] = PublicKey.findProgramAddressSync(
+      [
+        Buffer.from("user_prediction"),
+        pollPda.toBuffer(),
+        publicKey.toBuffer(),
+      ],
+      program.programId
+    );
+
+    let [predictionUpdatePda] = PublicKey.findProgramAddressSync(
+      [
+        Buffer.from("prediction_update"),
+        pollPda.toBuffer(),
+        pollAccount.numPredictionUpdates.toArrayLike(Buffer, "le", 8),
+      ],
+      program.programId
+    );
+
+    let [scoreListPda] = PublicKey.findProgramAddressSync(
+      [Buffer.from("scoring_list"), pollPda.toBuffer()],
+      program.programId
+    );
+
+    let [userScorePda] = PublicKey.findProgramAddressSync(
+      [Buffer.from("user_score"), pollPda.toBuffer(), publicKey.toBuffer()],
+      program.programId
+    );
+
+    setIsLoading(true);
+    let signature: TransactionSignature = "";
+    try {
+      console.log("lower", userLowerPrediction);
+      console.log("upper", userUpperPrediction);
+      const makePredictionInstruction = await program.methods
+        .makePrediction(userLowerPrediction || 0, userUpperPrediction || 100)
+        .accounts({
+          user: userPda,
+          poll: pollPda,
+          userPrediction: userPredictionPda,
+          predictionUpdate: predictionUpdatePda,
+          scoringList: scoreListPda,
+          userScore: userScorePda,
+        })
+        .instruction();
+
+      // Get the lates block hash to use on our transaction and confirmation
+      let latestBlockhash = await connection.getLatestBlockhash();
+
+      // Create a new TransactionMessage with version and compile it to version 0
+      const messageV0 = new TransactionMessage({
+        payerKey: publicKey,
+        recentBlockhash: latestBlockhash.blockhash,
+        instructions: [makePredictionInstruction],
+      }).compileToV0Message();
+
+      // Create a new VersionedTransaction to support the v0 message
+      const transaction = new VersionedTransaction(messageV0);
+
+      // Send transaction and await for signature
+      signature = await sendTransaction(transaction, connection);
+
+      // Await for confirmation
+      await connection.confirmTransaction(
+        { signature, ...latestBlockhash },
+        "confirmed"
       );
 
-      let [scoreListAccount] = PublicKey.findProgramAddressSync(
-        [Buffer.from("scoring_list"), pollAccount.toBuffer()],
-        program.programId
-      );
-
-      setIsLoading(true);
-      let signature: TransactionSignature = "";
-      try {
-        const registerUserInstruction = await program.methods
-          .resolvePoll(result)
-          .accounts({ poll: pollAccount, scoringList: scoreListAccount })
-          .instruction();
-
-        // Get the lates block hash to use on our transaction and confirmation
-        let latestBlockhash = await connection.getLatestBlockhash();
-
-        // Create a new TransactionMessage with version and compile it to version 0
-        const messageV0 = new TransactionMessage({
-          payerKey: publicKey,
-          recentBlockhash: latestBlockhash.blockhash,
-          instructions: [registerUserInstruction],
-        }).compileToV0Message();
-
-        // Create a new VersionedTransaction to support the v0 message
-        const transaction = new VersionedTransaction(messageV0);
-
-        // Send transaction and await for signature
-        signature = await sendTransaction(transaction, connection);
-
-        // Await for confirmation
-        await connection.confirmTransaction(
-          { signature, ...latestBlockhash },
-          "confirmed"
-        );
-
-        console.log(signature);
-        toast.success("Transaction successful!");
-        getPolls(publicKey);
-      } catch (error: any) {
-        toast.error("Transaction failed!: " + error?.message);
-        console.log(
-          "error",
-          `Transaction failed! ${error?.message}`,
-          signature
-        );
-        return;
-      } finally {
-        setIsLoading(false);
-      }
-    },
-    [publicKey, connection, sendTransaction, question, getPolls]
-  );
+      console.log(signature);
+      toast.success("Transaction successful!");
+    } catch (error: any) {
+      toast.error("Transaction failed!: " + error?.message);
+      console.log("error", `Transaction failed! ${error?.message}`, signature);
+      return;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [
+    publicKey,
+    connection,
+    sendTransaction,
+    question,
+    userLowerPrediction,
+    userUpperPrediction,
+  ]);
 
   return (
     <>
@@ -202,13 +240,13 @@ export const PredictSlider: FC<StartPollProps> = ({
             </Slider.Track>
             {isConfidenceInterval ? (
               <>
-                <div
+                {/* <div
                   className="absolute left-6 right-6 bg-dark-500/80"
                   // style={{
                   //   top: `${lowerHeight}%`,
                   //   bottom: `${higherHeight}%`,
                   // }}
-                />
+                /> */}
                 <Slider.Thumb className="block w-[1px] h-5 bg-black" />
                 <Slider.Thumb className="block w-[1px] h-5 bg-red-500" />
                 <Slider.Thumb className="block w-[1px] h-5 bg-blue-500" />
@@ -218,8 +256,8 @@ export const PredictSlider: FC<StartPollProps> = ({
             )}
           </Slider.Root>
           {!(
-            oldLowerPrediction === lowerPrediction &&
-            oldUpperPrediction === upperPrediction
+            oldLowerPrediction === userLowerPrediction &&
+            oldUpperPrediction === userUpperPrediction
           ) && (
             <button
               className="border border-gray-500 rounded-md py-[1px] px-[2px] text-xs"
@@ -281,6 +319,12 @@ export const PredictSlider: FC<StartPollProps> = ({
             <Switch.Thumb className="block w-4 h-4 bg-white rounded-full shadow-[0_2px_2px] shadow-black transition-transform duration-100 translate-x-0.5 will-change-transform data-[state=checked]:translate-x-5" />
           </Switch.Root>
         </div>
+        <button
+          className="bg-blue-300 rounded-md px-2 py-1 hover:bg-blue-400"
+          onClick={() => makePrediction()}
+        >
+          Make Prediction
+        </button>
       </div>
     </>
   );

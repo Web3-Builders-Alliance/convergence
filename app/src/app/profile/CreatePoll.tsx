@@ -62,7 +62,7 @@ export const CreatePoll: FC = () => {
 
     let signature: TransactionSignature = "";
     try {
-      const registerUserInstruction = await program.methods
+      const createPollInstruction = await program.methods
         .createPoll(question, description, null)
         .accounts({ poll: pollAccount, scoringList: scoreListAccount })
         .instruction();
@@ -74,7 +74,7 @@ export const CreatePoll: FC = () => {
       const messageV0 = new TransactionMessage({
         payerKey: publicKey,
         recentBlockhash: latestBlockhash.blockhash,
-        instructions: [registerUserInstruction],
+        instructions: [createPollInstruction],
       }).compileToV0Message();
 
       // Create a new VersionedTransaction to support the v0 message
