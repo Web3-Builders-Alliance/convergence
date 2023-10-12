@@ -16,6 +16,8 @@ type PollProps = {
 const PollCard: FC<PollProps> = ({ poll }) => {
   const { publicKey } = useWallet();
   const { connection } = useConnection();
+  const [lower, setLower] = useState<number | null>(null);
+  const [upper, setUpper] = useState<number | null>(null);
   const [lowerPrediction, setLowerPrediction] = useState<number | null>(null);
   const [upperPrediction, setUpperPrediction] = useState<number | null>(null);
 
@@ -58,8 +60,8 @@ const PollCard: FC<PollProps> = ({ poll }) => {
         );
         if (predictionAccount) {
           console.log("prediction account", predictionAccount);
-          setLowerPrediction(predictionAccount.lowerPrediction);
-          setUpperPrediction(predictionAccount.upperPrediction);
+          setLower(predictionAccount.lowerPrediction);
+          setUpper(predictionAccount.upperPrediction);
         }
       } catch (e) {
         console.log(e);
@@ -101,8 +103,8 @@ const PollCard: FC<PollProps> = ({ poll }) => {
       </div>
       <PredictSlider
         question={poll.question}
-        lowerPrediction={lowerPrediction}
-        upperPrediction={upperPrediction}
+        lowerPrediction={lower}
+        upperPrediction={upper}
         onChange={handleChange}
       />
     </div>

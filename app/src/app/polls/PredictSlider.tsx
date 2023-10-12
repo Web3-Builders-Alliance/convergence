@@ -10,7 +10,14 @@ import {
   VersionedTransaction,
 } from "@solana/web3.js";
 import { createHash } from "crypto";
-import { ChangeEvent, FC, useCallback, useRef, useState } from "react";
+import {
+  ChangeEvent,
+  FC,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import toast from "react-hot-toast";
 import * as Slider from "@radix-ui/react-slider";
 import * as Switch from "@radix-ui/react-switch";
@@ -45,15 +52,10 @@ export const PredictSlider: FC<StartPollProps> = ({
   const [userUpperPrediction, setUserUpperPrediction] =
     useState(upperPrediction);
 
-  console.log("lower", lowerPrediction);
-  console.log("upper", userUpperPrediction);
+  const [oldLowerPrediction, setOldLowerPrediction] = useState(lowerPrediction);
+  const [oldUpperPrediction, setOldUpperPrediction] = useState(upperPrediction);
 
-  const [oldLowerPrediction] = useState(lowerPrediction);
-  const [oldUpperPrediction] = useState(upperPrediction);
-  // const oldLowerPrediction = lowerPrediction;
-  // const oldUpperPrediction = upperPrediction;
-
-  const [oldIsConfidenceInterval] = useState(
+  const [oldIsConfidenceInterval, setOldIsConfidenceInterval] = useState(
     lowerPrediction !== null &&
       upperPrediction !== null &&
       lowerPrediction < upperPrediction
@@ -65,6 +67,31 @@ export const PredictSlider: FC<StartPollProps> = ({
       ? (upperPrediction + lowerPrediction) / 2
       : 50
   );
+  useEffect(() => {
+    setOldLowerPrediction(lowerPrediction);
+    setOldUpperPrediction(upperPrediction);
+    setIsConfidenceInterval(
+      lowerPrediction !== null &&
+        upperPrediction !== null &&
+        lowerPrediction < upperPrediction
+        ? true
+        : false
+    );
+    setUserLowerPrediction(lowerPrediction);
+    setUserUpperPrediction(upperPrediction);
+    setOldIsConfidenceInterval(
+      lowerPrediction !== null &&
+        upperPrediction !== null &&
+        lowerPrediction < upperPrediction
+        ? true
+        : false
+    );
+    setPrediction(
+      lowerPrediction !== null && upperPrediction !== null
+        ? (upperPrediction + lowerPrediction) / 2
+        : 50
+    );
+  }, [lowerPrediction, upperPrediction]);
 
   const intervalLength = (prediction: number, length: number) => {
     return Math.min(100 - prediction, prediction, Math.round(length / 2));
