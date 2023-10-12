@@ -62,6 +62,8 @@ const PollCard: FC<PollProps> = ({ poll }) => {
           console.log("prediction account", predictionAccount);
           setLower(predictionAccount.lowerPrediction);
           setUpper(predictionAccount.upperPrediction);
+          setLowerPrediction(predictionAccount.lowerPrediction);
+          setUpperPrediction(predictionAccount.upperPrediction);
         }
       } catch (e) {
         console.log(e);
@@ -73,17 +75,19 @@ const PollCard: FC<PollProps> = ({ poll }) => {
   if (!publicKey) {
     return <div></div>;
   }
-
+  console.log("upper", upperPrediction);
+  console.log("lower", lowerPrediction);
   return (
     <div>
-      <div>{poll.question}</div>
+      <div className="font-bold h-20">{poll.question}</div>
       <div>
         Crowd prediction:{" "}
         {poll.crowdPrediction
           ? (poll.crowdPrediction / 10000).toFixed(2) + "%"
           : "-"}
       </div>
-      <div className="flex gap-2">
+      <div># Forecasters: {poll.numForecasters.toString()}</div>
+      <div className="flex gap-2 mt-4">
         <div>
           Your prediction:{" "}
           {lowerPrediction !== null && upperPrediction !== null

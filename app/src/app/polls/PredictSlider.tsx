@@ -67,6 +67,9 @@ export const PredictSlider: FC<StartPollProps> = ({
       ? (upperPrediction + lowerPrediction) / 2
       : 50
   );
+
+  const { getPolls } = usePollStore();
+
   useEffect(() => {
     setOldLowerPrediction(lowerPrediction);
     setOldUpperPrediction(upperPrediction);
@@ -194,6 +197,9 @@ export const PredictSlider: FC<StartPollProps> = ({
 
       console.log(signature);
       toast.success("Transaction successful!");
+      setOldLowerPrediction(userLowerPrediction);
+      setOldUpperPrediction(userUpperPrediction);
+      getPolls(publicKey);
     } catch (error: any) {
       toast.error("Transaction failed!: " + error?.message);
       console.log("error", `Transaction failed! ${error?.message}`, signature);
@@ -208,6 +214,118 @@ export const PredictSlider: FC<StartPollProps> = ({
     question,
     userLowerPrediction,
     userUpperPrediction,
+    getPolls,
+  ]);
+
+  const updatePrediction = useCallback(async () => {
+    if (!publicKey) {
+      toast.error("Wallet not connected!", { position: "top-left" });
+      console.log("error", `Send Transaction: Wallet not connected!`);
+      return;
+    }
+
+    const program = new Program(
+      IDL as Idl,
+      programId
+    ) as unknown as Program<Convergence>;
+
+    const hexString = createHash("sha256")
+      .update(question, "utf8")
+      .digest("hex");
+    const questionSeed = Uint8Array.from(Buffer.from(hexString, "hex"));
+
+    let [pollPda] = PublicKey.findProgramAddressSync(
+      [Buffer.from("poll"), questionSeed],
+      program.programId
+    );
+    let pollAccount = await program.account.poll.fetch(pollPda);
+
+    let [userPredictionPda] = PublicKey.findProgramAddressSync(
+      [
+        Buffer.from("user_prediction"),
+        pollPda.toBuffer(),
+        publicKey.toBuffer(),
+      ],
+      program.programId
+    );
+
+    let [predictionUpdatePda] = PublicKey.findProgramAddressSync(
+      [
+        Buffer.from("prediction_update"),
+        pollPda.toBuffer(),
+        pollAccount.numPredictionUpdates.toArrayLike(Buffer, "le", 8),
+      ],
+      program.programId
+    );
+
+    let [scoreListPda] = PublicKey.findProgramAddressSync(
+      [Buffer.from("scoring_list"), pollPda.toBuffer()],
+      program.programId
+    );
+
+    let [userScorePda] = PublicKey.findProgramAddressSync(
+      [Buffer.from("user_score"), pollPda.toBuffer(), publicKey.toBuffer()],
+      program.programId
+    );
+
+    setIsLoading(true);
+    let signature: TransactionSignature = "";
+    try {
+      console.log("lower", userLowerPrediction);
+      console.log("upper", userUpperPrediction);
+      const updatePredictionInstruction = await program.methods
+        .updatePrediction(userLowerPrediction || 0, userUpperPrediction || 100)
+        .accounts({
+          poll: pollPda,
+          userPrediction: userPredictionPda,
+          predictionUpdate: predictionUpdatePda,
+          scoringList: scoreListPda,
+          userScore: userScorePda,
+        })
+        .instruction();
+
+      // Get the lates block hash to use on our transaction and confirmation
+      let latestBlockhash = await connection.getLatestBlockhash();
+
+      // Create a new TransactionMessage with version and compile it to version 0
+      const messageV0 = new TransactionMessage({
+        payerKey: publicKey,
+        recentBlockhash: latestBlockhash.blockhash,
+        instructions: [updatePredictionInstruction],
+      }).compileToV0Message();
+
+      // Create a new VersionedTransaction to support the v0 message
+      const transaction = new VersionedTransaction(messageV0);
+
+      // Send transaction and await for signature
+      signature = await sendTransaction(transaction, connection);
+
+      // Await for confirmation
+      await connection.confirmTransaction(
+        { signature, ...latestBlockhash },
+        "confirmed"
+      );
+
+      console.log(signature);
+      toast.success("Transaction successful!");
+      setOldLowerPrediction(userLowerPrediction);
+      setOldUpperPrediction(userUpperPrediction);
+      getPolls(publicKey);
+    } catch (error: any) {
+      toast.error("Transaction failed!: " + error?.message);
+      console.log("error", `Transaction failed! ${error?.message}`, signature);
+      return;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [
+    publicKey,
+    connection,
+    sendTransaction,
+    question,
+    userLowerPrediction,
+    userUpperPrediction,
+    getPolls,
   ]);
 
   return (
@@ -291,7 +409,7 @@ export const PredictSlider: FC<StartPollProps> = ({
               onClick={() => {
                 onChange(oldLowerPrediction, oldUpperPrediction);
                 setPrediction(
-                  oldLowerPrediction && oldUpperPrediction
+                  oldLowerPrediction !== null && oldUpperPrediction !== null
                     ? (oldLowerPrediction + oldUpperPrediction) / 2
                     : 50
                 );
@@ -346,12 +464,28 @@ export const PredictSlider: FC<StartPollProps> = ({
             <Switch.Thumb className="block w-4 h-4 bg-white rounded-full shadow-[0_2px_2px] shadow-black transition-transform duration-100 translate-x-0.5 will-change-transform data-[state=checked]:translate-x-5" />
           </Switch.Root>
         </div>
-        <button
-          className="bg-blue-300 rounded-md px-2 py-1 hover:bg-blue-400"
-          onClick={() => makePrediction()}
-        >
-          Make Prediction
-        </button>
+        {oldLowerPrediction === null ? (
+          userLowerPrediction === null ? (
+            <></>
+          ) : (
+            <button
+              className="bg-blue-300 rounded-md px-2 py-1 hover:bg-blue-400"
+              onClick={() => makePrediction()}
+            >
+              Make Prediction
+            </button>
+          )
+        ) : userLowerPrediction === oldLowerPrediction &&
+          userUpperPrediction === oldUpperPrediction ? (
+          <></>
+        ) : (
+          <button
+            className="bg-blue-300 rounded-md px-2 py-1 hover:bg-blue-400"
+            onClick={() => updatePrediction()}
+          >
+            Update Prediction
+          </button>
+        )}
       </div>
     </>
   );
