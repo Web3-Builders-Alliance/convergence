@@ -12,23 +12,57 @@ import {
 import { createHash } from "crypto";
 import { ChangeEvent, FC, useCallback, useState } from "react";
 import toast from "react-hot-toast";
+import * as Slider from "@radix-ui/react-slider";
+import * as Switch from "@radix-ui/react-switch";
+
+type SliderRange = [number] | [number, number, number];
 
 type StartPollProps = {
   question: string;
-  prediction: string;
-  onChange: (value: string) => void;
+  lowerPrediction: number | null;
+  upperPrediction: number | null;
+  onChange: (lower: number | null, upper: number | null) => void;
 };
 
 export const PredictSlider: FC<StartPollProps> = ({
   question,
-  prediction,
+  lowerPrediction,
+  upperPrediction,
   onChange,
 }: StartPollProps) => {
   const { connection } = useConnection();
   const { publicKey, sendTransaction } = useWallet();
   const [isLoading, setIsLoading] = useState(false);
+  const [isConfidenceInterval, setIsConfidenceInterval] = useState(
+    lowerPrediction !== null &&
+      upperPrediction !== null &&
+      lowerPrediction < upperPrediction
+      ? true
+      : false
+  );
+  const [userLowerPrediction, setUserLowerPrediction] =
+    useState(lowerPrediction);
+  const [userUpperPrediction, setUserUpperPrediction] =
+    useState(upperPrediction);
 
-  const [oldPrediction] = useState(prediction);
+  const [oldLowerPrediction] = useState(lowerPrediction);
+  const [oldUpperPrediction] = useState(upperPrediction);
+  const [oldIsConfidenceInterval] = useState(
+    lowerPrediction !== null &&
+      upperPrediction !== null &&
+      lowerPrediction < upperPrediction
+      ? true
+      : false
+  );
+  const [prediction, setPrediction] = useState(
+    lowerPrediction !== null && upperPrediction !== null
+      ? (upperPrediction + lowerPrediction) / 2
+      : 50
+  );
+
+  const intervalLength = (prediction: number) => {
+    return Math.min(100 - prediction, prediction, 10);
+  };
 
   const { getPolls } = usePollStore();
 
@@ -109,19 +143,116 @@ export const PredictSlider: FC<StartPollProps> = ({
   );
 
   return (
-    <div className="flex items-center">
-      <input
-        type="range"
-        min="0"
-        max="100"
-        value={prediction}
-        onChange={(e) => onChange(e.target.value)}
-        className="slider appearance-none h-4 bg-gray-300 rounded-full"
-      />
-
-      {/* <span className="ml-2">{prediction}</span> */}
-      <button onClick={() => onChange(oldPrediction)}>Reset</button>
-      <button onClick={() => onChange(oldPrediction)}>Submit</button>
-    </div>
+    <>
+      <div className="flex flex-col items-start">
+        <div className="w-full flex gap-4 my-4">
+          <Slider.Root
+            min={0}
+            max={100}
+            step={1}
+            minStepsBetweenThumbs={1}
+            className="w-1/2 h-5 block relative cursor-pointer bg-white rounded-full"
+            value={
+              isConfidenceInterval
+                ? [userLowerPrediction!, prediction, userUpperPrediction!]
+                : [prediction]
+            }
+            onValueChange={(sliderRange: SliderRange) => {
+              if (sliderRange.length === 1) {
+                setPrediction(sliderRange[0]);
+                onChange(sliderRange[0], sliderRange[0]);
+                setUserLowerPrediction(sliderRange[0]);
+                setUserUpperPrediction(sliderRange[0]);
+              } else {
+              }
+            }}
+            orientation="horizontal"
+          >
+            <Slider.Track>
+              <Slider.Range />
+            </Slider.Track>
+            {isConfidenceInterval ? (
+              <>
+                <div
+                  className="absolute left-6 right-6 bg-dark-500/80"
+                  // style={{
+                  //   top: `${lowerHeight}%`,
+                  //   bottom: `${higherHeight}%`,
+                  // }}
+                />
+                <Slider.Thumb className="block w-[1px] h-5 bg-black" />
+                <Slider.Thumb className="block w-[1px] h-5 bg-red-500" />
+                <Slider.Thumb className="block w-[1px] h-5 bg-blue-500" />
+              </>
+            ) : (
+              <Slider.Thumb className="block w-[1px] h-5 bg-red-500" />
+            )}
+          </Slider.Root>
+          {!(
+            oldLowerPrediction === lowerPrediction &&
+            oldUpperPrediction === upperPrediction
+          ) && (
+            <button
+              className="border border-gray-500 rounded-md py-[1px] px-[2px] text-xs"
+              onClick={() => {
+                onChange(oldLowerPrediction, oldUpperPrediction);
+                setPrediction(
+                  oldLowerPrediction && oldUpperPrediction
+                    ? (oldLowerPrediction + oldUpperPrediction) / 2
+                    : 50
+                );
+                setIsConfidenceInterval(oldIsConfidenceInterval);
+                setUserLowerPrediction(oldLowerPrediction);
+                setUserUpperPrediction(oldUpperPrediction);
+              }}
+            >
+              Reset
+            </button>
+          )}
+        </div>
+        <div className="flex items-center">
+          <label
+            className="text-[15px] leading-none pr-[15px]"
+            htmlFor="confidence-interval"
+          >
+            Confidence interval
+          </label>
+          <Switch.Root
+            checked={isConfidenceInterval}
+            onCheckedChange={(value) => {
+              setIsConfidenceInterval(value);
+              if (value) {
+                setUserLowerPrediction(
+                  userLowerPrediction !== null
+                    ? userLowerPrediction - intervalLength(prediction)
+                    : 50 - intervalLength(50)
+                );
+                setUserUpperPrediction(
+                  userUpperPrediction !== null
+                    ? userUpperPrediction + intervalLength(prediction)
+                    : 50 + intervalLength(50)
+                );
+                onChange(
+                  userLowerPrediction !== null
+                    ? userLowerPrediction - intervalLength(prediction)
+                    : 50 - intervalLength(50),
+                  userUpperPrediction !== null
+                    ? userUpperPrediction + intervalLength(prediction)
+                    : 50 + intervalLength(50)
+                );
+              } else {
+                setUserLowerPrediction(prediction);
+                setUserUpperPrediction(prediction);
+                onChange(prediction, prediction);
+              }
+            }}
+            className="w-10 h-5 rounded-full relative bg-red-400 data-[state=checked]:bg-green-400 outline-none cursor-default"
+            id="confidence-interval"
+          >
+            <Switch.Thumb className="block w-4 h-4 bg-white rounded-full shadow-[0_2px_2px] shadow-black transition-transform duration-100 translate-x-0.5 will-change-transform data-[state=checked]:translate-x-5" />
+          </Switch.Root>
+        </div>
+      </div>
+    </>
   );
 };

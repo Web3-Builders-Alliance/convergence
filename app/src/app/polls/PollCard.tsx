@@ -5,6 +5,7 @@ import { PublicKey } from "@solana/web3.js";
 import { ChangeEvent, FC, useEffect, useState } from "react";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { PredictSlider } from "./PredictSlider";
+import { FaPlusMinus } from "react-icons/fa6";
 
 type PollProps = {
   poll: Poll;
@@ -14,9 +15,12 @@ const PollCard: FC<PollProps> = ({ poll }) => {
   const { publicKey } = useWallet();
   const { connection } = useConnection();
   const [userPredicion, setUserPrediction] = useState("-");
+  const [lowerPrediction, setLowerPrediction] = useState<number | null>(20);
+  const [upperPrediction, setUpperPrediction] = useState<number | null>(40);
 
-  const handleChange = (prediction: string) => {
-    setUserPrediction(prediction);
+  const handleChange = (lower: number | null, upper: number | null) => {
+    setLowerPrediction(lower);
+    setUpperPrediction(upper);
   };
 
   useEffect(() => {
@@ -57,10 +61,28 @@ const PollCard: FC<PollProps> = ({ poll }) => {
     <div>
       <div>{poll.question}</div>
       <div>Crowd prediction: {poll.crowdPrediction || "-"}</div>
-      <div>Your prediction: {userPredicion}</div>
+      <div className="flex gap-2">
+        <div>
+          Your prediction:{" "}
+          {lowerPrediction !== null && upperPrediction !== null
+            ? (lowerPrediction + upperPrediction) / 2
+            : "-"}
+        </div>
+        {lowerPrediction !== null &&
+        upperPrediction !== null &&
+        lowerPrediction < upperPrediction ? (
+          <span className="flex items-center gap-1 text-sm text-gray-700">
+            <FaPlusMinus />
+            {(upperPrediction - lowerPrediction) / 2}
+          </span>
+        ) : (
+          <></>
+        )}
+      </div>
       <PredictSlider
         question={poll.question}
-        prediction={userPredicion}
+        lowerPrediction={lowerPrediction}
+        upperPrediction={upperPrediction}
         onChange={handleChange}
       />
     </div>
