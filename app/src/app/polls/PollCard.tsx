@@ -8,6 +8,7 @@ import { PredictSlider } from "./PredictSlider";
 import { FaPlusMinus } from "react-icons/fa6";
 import { Idl, Program } from "@coral-xyz/anchor";
 import { Convergence, IDL } from "@/idl/convergence_idl";
+import { RiArrowRightDoubleLine } from "react-icons/ri";
 import Link from "next/link";
 
 type PollProps = {
@@ -77,47 +78,52 @@ const PollCard: FC<PollProps> = ({ poll }) => {
   }
 
   return (
-    <Link
-      href={
-        "/polls/" +
-        createHash("sha256").update(poll.question, "utf8").digest("hex")
-      }
-    >
-      <div className="border border-blue-300 rounded-xl p-4 transition-all hover:scale-105">
-        <div className="font-bold h-20">{poll.question}</div>
-        <div>
-          Crowd prediction:{" "}
-          {poll.crowdPrediction
-            ? (poll.crowdPrediction / 10000).toFixed(2) + "%"
-            : "-"}
-        </div>
-        <div># Forecasters: {poll.numForecasters.toString()}</div>
-        <div className="flex gap-2 mt-4">
-          <div>
-            Your prediction:{" "}
-            {lowerPrediction !== null && upperPrediction !== null
-              ? ((lowerPrediction + upperPrediction) / 2).toString() + "%"
-              : "-"}{" "}
-          </div>
-          {lowerPrediction !== null &&
-          upperPrediction !== null &&
-          lowerPrediction < upperPrediction ? (
-            <span className="flex items-center gap-1 text-xs text-gray-700">
-              <FaPlusMinus className="text-xs scale-90" />
-              {(upperPrediction - lowerPrediction) / 2}
-            </span>
-          ) : (
-            <></>
-          )}
-        </div>
-        <PredictSlider
-          question={poll.question}
-          lowerPrediction={lower}
-          upperPrediction={upper}
-          onChange={handleChange}
-        />
+    <div className="flex flex-col border border-blue-300 rounded-xl p-4 transition-all">
+      <div className="font-bold h-20">{poll.question}</div>
+      <div>
+        Crowd prediction:{" "}
+        {poll.crowdPrediction
+          ? (poll.crowdPrediction / 10000).toFixed(2) + "%"
+          : "-"}
       </div>
-    </Link>
+      <div># Forecasters: {poll.numForecasters.toString()}</div>
+      <div className="flex gap-2 mt-4">
+        <div>
+          Your prediction:{" "}
+          {lowerPrediction !== null && upperPrediction !== null
+            ? ((lowerPrediction + upperPrediction) / 2).toString() + "%"
+            : "-"}{" "}
+        </div>
+        {lowerPrediction !== null &&
+        upperPrediction !== null &&
+        lowerPrediction < upperPrediction ? (
+          <span className="flex items-center gap-1 text-xs text-gray-700">
+            <FaPlusMinus className="text-xs scale-90" />
+            {(upperPrediction - lowerPrediction) / 2}
+          </span>
+        ) : (
+          <></>
+        )}
+      </div>
+      <PredictSlider
+        question={poll.question}
+        lowerPrediction={lower}
+        upperPrediction={upper}
+        onChange={handleChange}
+      />
+      <div className="flex self-end">
+        <Link
+          className="text-xs"
+          href={
+            "/polls/" +
+            createHash("sha256").update(poll.question, "utf8").digest("hex")
+          }
+        >
+          Details
+        </Link>
+        <RiArrowRightDoubleLine />
+      </div>
+    </div>
   );
 };
 

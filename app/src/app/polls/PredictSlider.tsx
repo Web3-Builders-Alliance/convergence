@@ -470,7 +470,10 @@ export const PredictSlider: FC<StartPollProps> = ({
           ) : (
             <button
               className="bg-blue-300 rounded-md px-2 py-1 hover:bg-blue-400"
-              onClick={() => makePrediction()}
+              onClick={(e) => {
+                e.stopPropagation();
+                makePrediction();
+              }}
             >
               Make Prediction
             </button>
@@ -481,7 +484,10 @@ export const PredictSlider: FC<StartPollProps> = ({
         ) : (
           <button
             className="bg-blue-300 rounded-md px-2 py-1 hover:bg-blue-400"
-            onClick={() => updatePrediction()}
+            onClick={(e) => {
+              e.stopPropagation();
+              updatePrediction();
+            }}
           >
             Update Prediction
           </button>
