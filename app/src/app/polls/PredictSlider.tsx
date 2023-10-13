@@ -422,7 +422,7 @@ export const PredictSlider: FC<StartPollProps> = ({
             </button>
           )}
         </div>
-        <div className="flex items-center">
+        <div className="flex items-center mb-4">
           <label
             className="text-[15px] leading-none pr-[15px]"
             htmlFor="confidence-interval"

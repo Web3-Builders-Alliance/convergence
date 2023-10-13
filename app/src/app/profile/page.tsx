@@ -101,7 +101,10 @@ export default function Profile() {
                       >
                         <div className="h-20">{poll.question}</div>
                         <div className="my-8">
-                          Crowd prediction: {poll.crowdPrediction || "-"}
+                          Crowd prediction:{" "}
+                          {poll.crowdPrediction
+                            ? (poll.crowdPrediction / 10000).toFixed(2) + "%"
+                            : "-"}
                         </div>
                         {idx === 2 &&
                           (hasStarted ? (
