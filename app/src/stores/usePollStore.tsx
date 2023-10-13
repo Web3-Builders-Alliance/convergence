@@ -1,18 +1,10 @@
 import { create } from "zustand";
-import { Connection, PublicKey, LAMPORTS_PER_SOL } from "@solana/web3.js";
-import {
-  AccountClient,
-  Idl,
-  Program,
-  ProgramAccount,
-  DecodeType,
-  BN,
-} from "@coral-xyz/anchor";
+import { PublicKey } from "@solana/web3.js";
+import { Idl, Program } from "@coral-xyz/anchor";
 import { Convergence, IDL } from "@/idl/convergence_idl";
 import { connection, programId } from "@/utils/anchor";
 import { Poll } from "@/types/program_types";
 import { createHash } from "crypto";
-import { connect } from "http2";
 
 type PollStore = {
   allPolls: Poll[];
@@ -41,63 +33,39 @@ const usePollStore = create<PollStore>((set, _get) => ({
         const polls = await program.account.poll.all();
         const decoded = polls.map((poll) => poll.account) as unknown as Poll[];
         allPolls = decoded;
+        let allUserPollsMask = await Promise.all(
+          allPolls.map((poll) => {
+            const hexString = createHash("sha256")
+              .update(poll.question, "utf8")
+              .digest("hex");
+            const questionSeed = Uint8Array.from(Buffer.from(hexString, "hex"));
+
+            let [pollPda] = PublicKey.findProgramAddressSync(
+              [Buffer.from("poll"), questionSeed],
+              program.programId
+            );
+
+            let [userPredictionPda] = PublicKey.findProgramAddressSync(
+              [
+                Buffer.from("user_prediction"),
+                pollPda.toBuffer(),
+                publicKey.toBuffer(),
+              ],
+              program.programId
+            );
+            const userPrediction = connection.getAccountInfo(userPredictionPda);
+
+            return userPrediction;
+          })
+        );
+        let allUserPolls = allPolls.filter((_, i) => allUserPollsMask[i]);
+        livePolls = allUserPolls.filter((poll) => poll.open);
+        pastPolls = allUserPolls.filter((poll) => poll.result !== null);
         onwPolls = decoded.filter(
           (poll) => poll.creator.toBase58() === publicKey.toBase58()
         );
-        const allLivePolls = decoded.filter((poll) => poll.open);
-        let allLivePollsMask = await Promise.all(
-          allLivePolls.map((poll) => {
-            const hexString = createHash("sha256")
-              .update(poll.question, "utf8")
-              .digest("hex");
-            const questionSeed = Uint8Array.from(Buffer.from(hexString, "hex"));
-
-            let [pollPda] = PublicKey.findProgramAddressSync(
-              [Buffer.from("poll"), questionSeed],
-              program.programId
-            );
-
-            let [userPredictionPda] = PublicKey.findProgramAddressSync(
-              [
-                Buffer.from("user_prediction"),
-                pollPda.toBuffer(),
-                publicKey.toBuffer(),
-              ],
-              program.programId
-            );
-            const userPrediction = connection.getAccountInfo(userPredictionPda);
-
-            return userPrediction;
-          })
-        );
-        livePolls = allLivePolls.filter((_, i) => allLivePollsMask[i]);
-        const allPastPolls = decoded.filter((poll) => poll.result !== null);
-        let pastPollsMask = await Promise.all(
-          allPastPolls.map((poll) => {
-            const hexString = createHash("sha256")
-              .update(poll.question, "utf8")
-              .digest("hex");
-            const questionSeed = Uint8Array.from(Buffer.from(hexString, "hex"));
-
-            let [pollPda] = PublicKey.findProgramAddressSync(
-              [Buffer.from("poll"), questionSeed],
-              program.programId
-            );
-
-            let [userPredictionPda] = PublicKey.findProgramAddressSync(
-              [
-                Buffer.from("user_prediction"),
-                pollPda.toBuffer(),
-                publicKey.toBuffer(),
-              ],
-              program.programId
-            );
-            const userPrediction = connection.getAccountInfo(userPredictionPda);
-
-            return userPrediction;
-          })
-        );
-        pastPolls = allPastPolls.filter((_, i) => pastPollsMask[i]);
+        // livePolls = decoded.filter((poll) => poll.open);
+        // pastPolls = decoded.filter((poll) => poll.result !== null);
       } catch (e) {
         console.log(`error getting user account: `, e);
       }

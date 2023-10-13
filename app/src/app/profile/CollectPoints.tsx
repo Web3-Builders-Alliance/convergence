@@ -1,5 +1,6 @@
 import { Convergence, IDL } from "@/idl/convergence_idl";
 import usePollStore from "@/stores/usePollStore";
+import useUserAccountStore from "@/stores/useUserAccountStore";
 import { programId } from "@/utils/anchor";
 import { Idl, Program } from "@coral-xyz/anchor";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
@@ -12,6 +13,7 @@ import {
 import { createHash } from "crypto";
 import { FC, useCallback, useState } from "react";
 import toast from "react-hot-toast";
+import { ImSpinner2 } from "react-icons/im";
 
 type StartPollProps = {
   question: string;
@@ -25,6 +27,7 @@ export const CollectPoints: FC<StartPollProps> = ({
   const [isLoading, setIsLoading] = useState(false);
 
   const { getPolls } = usePollStore();
+  const { getUserAccount } = useUserAccountStore();
 
   const onClick = useCallback(async () => {
     if (!publicKey) {
@@ -111,6 +114,7 @@ export const CollectPoints: FC<StartPollProps> = ({
       console.log(signature);
       toast.success("Transaction successful!");
       getPolls(publicKey);
+      getUserAccount(connection, publicKey);
     } catch (error: any) {
       toast.error("Transaction failed!: " + error?.message);
       console.log("error", `Transaction failed! ${error?.message}`, signature);
@@ -118,7 +122,14 @@ export const CollectPoints: FC<StartPollProps> = ({
     } finally {
       setIsLoading(false);
     }
-  }, [publicKey, connection, sendTransaction, question, getPolls]);
+  }, [
+    publicKey,
+    connection,
+    sendTransaction,
+    question,
+    getPolls,
+    getUserAccount,
+  ]);
 
   return (
     <div className="flex flex-col items-center">
@@ -128,7 +139,14 @@ export const CollectPoints: FC<StartPollProps> = ({
           onClick={() => onClick()}
           disabled={isLoading}
         >
-          <div className="">Collect Points</div>
+          {isLoading ? (
+            <span className="animate-pulse">
+              <ImSpinner2 className="inline mr-2 animate-spin text-sm" />
+              Loading...
+            </span>
+          ) : (
+            <div className="">Collect Points</div>
+          )}
         </button>
       </div>
     </div>

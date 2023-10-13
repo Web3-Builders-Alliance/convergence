@@ -99,31 +99,29 @@ export default function Profile() {
                     {polls.map(async (poll) => {
                       const hasStarted = poll.startSlot.toNumber() > 0;
                       const hasResolved = poll.result !== null;
-                      const hexString = createHash("sha256")
-                        .update(poll.question, "utf8")
-                        .digest("hex");
-                      const questionSeed = Uint8Array.from(
-                        Buffer.from(hexString, "hex")
-                      );
+                      // const hexString = createHash("sha256")
+                      //   .update(poll.question, "utf8")
+                      //   .digest("hex");
+                      // const questionSeed = Uint8Array.from(
+                      //   Buffer.from(hexString, "hex")
+                      // );
 
-                      let [pollPda] = PublicKey.findProgramAddressSync(
-                        [Buffer.from("poll"), questionSeed],
-                        programId
-                      );
+                      // let [pollPda] = PublicKey.findProgramAddressSync(
+                      //   [Buffer.from("poll"), questionSeed],
+                      //   programId
+                      // );
 
-                      let [userScorePda] = PublicKey.findProgramAddressSync(
-                        [
-                          Buffer.from("user_score"),
-                          pollPda.toBuffer(),
-                          wallet.publicKey!.toBuffer(),
-                        ],
-                        programId
-                      );
-                      const hasCollected =
-                        (await connection.getAccountInfo(userScorePda)) ===
-                        null;
-
-                      console.log("");
+                      // let [userScorePda] = PublicKey.findProgramAddressSync(
+                      //   [
+                      //     Buffer.from("user_score"),
+                      //     pollPda.toBuffer(),
+                      //     wallet.publicKey!.toBuffer(),
+                      //   ],
+                      //   programId
+                      // );
+                      // const hasCollected =
+                      //   (await connection.getAccountInfo(userScorePda)) ===
+                      //   null;
 
                       return (
                         <div
@@ -152,11 +150,7 @@ export default function Profile() {
                             ))}
                           {idx === 0 &&
                             (hasResolved ? (
-                              hasCollected ? (
-                                <div>Points collected</div>
-                              ) : (
-                                <CollectPoints question={poll.question} />
-                              )
+                              <CollectPoints question={poll.question} />
                             ) : (
                               <div></div>
                             ))}
