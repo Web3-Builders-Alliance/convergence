@@ -5,9 +5,12 @@ import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
 import { useAnchorWallet } from "@solana/wallet-adapter-react";
 
 // Create a connection to the devnet cluster
-export const connection = new Connection(clusterApiUrl("devnet"), {
-  commitment: "confirmed",
-});
+export const connection = new Connection(
+  process.env.NEXT_PUBLIC_RPC_URL || clusterApiUrl("devnet"),
+  {
+    commitment: "confirmed",
+  }
+);
 
 // Create a placeholder wallet to set up AnchorProvider
 // const wallet = new NodeWallet(Keypair.generate());

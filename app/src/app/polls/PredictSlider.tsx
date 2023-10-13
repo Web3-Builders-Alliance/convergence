@@ -159,53 +159,63 @@ export const PredictSlider: FC<StartPollProps> = ({
     setIsLoading(true);
     let signature: TransactionSignature = "";
     try {
-      console.log("lower", userLowerPrediction);
-      console.log("upper", userUpperPrediction);
-      const makePredictionInstruction = await program.methods
-        .makePrediction(userLowerPrediction || 0, userUpperPrediction || 100)
-        .accounts({
-          user: userPda,
-          poll: pollPda,
-          userPrediction: userPredictionPda,
-          predictionUpdate: predictionUpdatePda,
-          scoringList: scoreListPda,
-          userScore: userScorePda,
-        })
-        .instruction();
+      const userAccount = await program.account.user.fetch(userPda);
+      try {
+        const makePredictionInstruction = await program.methods
+          .makePrediction(
+            userLowerPrediction !== null ? userLowerPrediction : 0,
+            userUpperPrediction != null ? userUpperPrediction : 100
+          )
+          .accounts({
+            user: userPda,
+            poll: pollPda,
+            userPrediction: userPredictionPda,
+            predictionUpdate: predictionUpdatePda,
+            scoringList: scoreListPda,
+            userScore: userScorePda,
+          })
+          .instruction();
 
-      // Get the lates block hash to use on our transaction and confirmation
-      let latestBlockhash = await connection.getLatestBlockhash();
+        // Get the lates block hash to use on our transaction and confirmation
+        let latestBlockhash = await connection.getLatestBlockhash();
 
-      // Create a new TransactionMessage with version and compile it to version 0
-      const messageV0 = new TransactionMessage({
-        payerKey: publicKey,
-        recentBlockhash: latestBlockhash.blockhash,
-        instructions: [makePredictionInstruction],
-      }).compileToV0Message();
+        // Create a new TransactionMessage with version and compile it to version 0
+        const messageV0 = new TransactionMessage({
+          payerKey: publicKey,
+          recentBlockhash: latestBlockhash.blockhash,
+          instructions: [makePredictionInstruction],
+        }).compileToV0Message();
 
-      // Create a new VersionedTransaction to support the v0 message
-      const transaction = new VersionedTransaction(messageV0);
+        // Create a new VersionedTransaction to support the v0 message
+        const transaction = new VersionedTransaction(messageV0);
 
-      // Send transaction and await for signature
-      signature = await sendTransaction(transaction, connection);
+        // Send transaction and await for signature
+        signature = await sendTransaction(transaction, connection);
 
-      // Await for confirmation
-      await connection.confirmTransaction(
-        { signature, ...latestBlockhash },
-        "confirmed"
-      );
+        // Await for confirmation
+        await connection.confirmTransaction(
+          { signature, ...latestBlockhash },
+          "confirmed"
+        );
 
-      console.log(signature);
-      toast.success("Transaction successful!");
-      setOldLowerPrediction(userLowerPrediction);
-      setOldUpperPrediction(userUpperPrediction);
-      getPolls(publicKey);
-    } catch (error: any) {
-      toast.error("Transaction failed!: " + error?.message);
-      console.log("error", `Transaction failed! ${error?.message}`, signature);
-      return;
-    } finally {
-      setIsLoading(false);
+        console.log(signature);
+        toast.success("Transaction successful!");
+        setOldLowerPrediction(userLowerPrediction);
+        setOldUpperPrediction(userUpperPrediction);
+        getPolls(publicKey);
+      } catch (error: any) {
+        toast.error("Transaction failed!: " + error?.message);
+        console.log(
+          "error",
+          `Transaction failed! ${error?.message}`,
+          signature
+        );
+        return;
+      } finally {
+        setIsLoading(false);
+      }
+    } catch (e) {
+      toast.error("Please register first on your profile page.");
     }
   }, [
     publicKey,
@@ -274,7 +284,10 @@ export const PredictSlider: FC<StartPollProps> = ({
       console.log("lower", userLowerPrediction);
       console.log("upper", userUpperPrediction);
       const updatePredictionInstruction = await program.methods
-        .updatePrediction(userLowerPrediction || 0, userUpperPrediction || 100)
+        .updatePrediction(
+          userLowerPrediction !== null ? userLowerPrediction : 0,
+          userUpperPrediction != null ? userUpperPrediction : 100
+        )
         .accounts({
           poll: pollPda,
           userPrediction: userPredictionPda,
@@ -430,6 +443,7 @@ export const PredictSlider: FC<StartPollProps> = ({
             Confidence interval
           </label>
           <Switch.Root
+            disabled={userLowerPrediction === 100 || userUpperPrediction === 0}
             checked={isConfidenceInterval}
             onCheckedChange={(value) => {
               setIsConfidenceInterval(value);
@@ -458,7 +472,7 @@ export const PredictSlider: FC<StartPollProps> = ({
                 onChange(prediction, prediction);
               }
             }}
-            className="w-10 h-5 rounded-full relative bg-red-400 data-[state=checked]:bg-green-400 outline-none cursor-default"
+            className="w-10 h-5 rounded-full relative bg-red-400 data-[state=checked]:bg-green-400 outline-none cursor-default disabled:bg-gray-300"
             id="confidence-interval"
           >
             <Switch.Thumb className="block w-4 h-4 bg-white rounded-full shadow-[0_2px_2px] shadow-black transition-transform duration-100 translate-x-0.5 will-change-transform data-[state=checked]:translate-x-5" />

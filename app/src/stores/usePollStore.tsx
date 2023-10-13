@@ -9,8 +9,10 @@ import {
   BN,
 } from "@coral-xyz/anchor";
 import { Convergence, IDL } from "@/idl/convergence_idl";
-import { programId } from "@/utils/anchor";
+import { connection, programId } from "@/utils/anchor";
 import { Poll } from "@/types/program_types";
+import { createHash } from "crypto";
+import { connect } from "http2";
 
 type PollStore = {
   allPolls: Poll[];
@@ -26,10 +28,10 @@ const usePollStore = create<PollStore>((set, _get) => ({
   onwPolls: [],
   pastPolls: [],
   getPolls: async (publicKey) => {
-    let allPolls: any[] = [];
-    let livePolls: any[] = [];
-    let onwPolls: any[] = [];
-    let pastPolls: any[] = [];
+    let allPolls: Poll[] = [];
+    let livePolls: Poll[] = [];
+    let onwPolls: Poll[] = [];
+    let pastPolls: Poll[] = [];
     if (publicKey !== null) {
       const program = new Program(
         IDL as Idl,
@@ -42,8 +44,60 @@ const usePollStore = create<PollStore>((set, _get) => ({
         onwPolls = decoded.filter(
           (poll) => poll.creator.toBase58() === publicKey.toBase58()
         );
-        livePolls = decoded.filter((poll) => poll.open);
-        pastPolls = decoded.filter((poll) => poll.result !== null);
+        const allLivePolls = decoded.filter((poll) => poll.open);
+        let allLivePollsMask = await Promise.all(
+          allLivePolls.map((poll) => {
+            const hexString = createHash("sha256")
+              .update(poll.question, "utf8")
+              .digest("hex");
+            const questionSeed = Uint8Array.from(Buffer.from(hexString, "hex"));
+
+            let [pollPda] = PublicKey.findProgramAddressSync(
+              [Buffer.from("poll"), questionSeed],
+              program.programId
+            );
+
+            let [userPredictionPda] = PublicKey.findProgramAddressSync(
+              [
+                Buffer.from("user_prediction"),
+                pollPda.toBuffer(),
+                publicKey.toBuffer(),
+              ],
+              program.programId
+            );
+            const userPrediction = connection.getAccountInfo(userPredictionPda);
+
+            return userPrediction;
+          })
+        );
+        livePolls = allLivePolls.filter((_, i) => allLivePollsMask[i]);
+        const allPastPolls = decoded.filter((poll) => poll.result !== null);
+        let pastPollsMask = await Promise.all(
+          allPastPolls.map((poll) => {
+            const hexString = createHash("sha256")
+              .update(poll.question, "utf8")
+              .digest("hex");
+            const questionSeed = Uint8Array.from(Buffer.from(hexString, "hex"));
+
+            let [pollPda] = PublicKey.findProgramAddressSync(
+              [Buffer.from("poll"), questionSeed],
+              program.programId
+            );
+
+            let [userPredictionPda] = PublicKey.findProgramAddressSync(
+              [
+                Buffer.from("user_prediction"),
+                pollPda.toBuffer(),
+                publicKey.toBuffer(),
+              ],
+              program.programId
+            );
+            const userPrediction = connection.getAccountInfo(userPredictionPda);
+
+            return userPrediction;
+          })
+        );
+        pastPolls = allPastPolls.filter((_, i) => pastPollsMask[i]);
       } catch (e) {
         console.log(`error getting user account: `, e);
       }
