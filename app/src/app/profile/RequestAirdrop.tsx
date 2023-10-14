@@ -10,7 +10,6 @@ import { FC, useCallback, useState } from "react";
 import toast from "react-hot-toast";
 
 export const RequestAirdrop: FC = () => {
-  const { connection } = useConnection();
   const { publicKey } = useWallet();
   const { getUserSOLBalance } = useUserSOLBalanceStore();
   const [isLoading, setIsLoading] = useState(false);
@@ -37,14 +36,14 @@ export const RequestAirdrop: FC = () => {
 
       // Get the lates block hash to use on our transaction and confirmation
       let latestBlockhash = await publicConnection.getLatestBlockhash();
-      await connection.confirmTransaction(
+      await publicConnection.confirmTransaction(
         { signature, ...latestBlockhash },
         "confirmed"
       );
 
       toast.success("Airdrop successful!", { position: "top-left" });
 
-      getUserSOLBalance(connection, publicKey);
+      getUserSOLBalance(publicConnection, publicKey);
     } catch (error: any) {
       toast.error(`Airdrop failed!: ${error.message}`, {
         position: "top-left",
@@ -54,7 +53,7 @@ export const RequestAirdrop: FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [publicKey, connection, getUserSOLBalance]);
+  }, [publicKey, getUserSOLBalance]);
 
   return (
     <button
