@@ -344,13 +344,13 @@ export const PredictSlider: FC<StartPollProps> = ({
   return (
     <>
       <div className="flex flex-col items-start">
-        <div className="w-full flex gap-4 my-4">
+        <div className="w-full flex gap-4 my-8">
           <Slider.Root
             min={0}
             max={100}
             step={1}
             minStepsBetweenThumbs={1}
-            className="w-1/2 h-5 block relative cursor-pointer bg-white rounded-full"
+            className="w-1/2 h-5 block relative bg-white rounded-full"
             value={
               isConfidenceInterval
                 ? [userLowerPrediction!, prediction, userUpperPrediction!]
@@ -405,14 +405,15 @@ export const PredictSlider: FC<StartPollProps> = ({
                   //   bottom: `${higherHeight}%`,
                   // }}
                 /> */}
-                <Slider.Thumb className="block w-[1px] h-5 bg-black" />
-                <Slider.Thumb className="block w-[1px] h-5 bg-red-500" />
-                <Slider.Thumb className="block w-[1px] h-5 bg-blue-500" />
+                <CustomThumb />
+                <CustomThumb middle />
+                <CustomThumb />
               </>
             ) : (
-              <Slider.Thumb className="block w-[1px] h-5 bg-red-500" />
+              <CustomThumb />
             )}
           </Slider.Root>
+
           {!(
             oldLowerPrediction === userLowerPrediction &&
             oldUpperPrediction === userUpperPrediction
@@ -435,6 +436,7 @@ export const PredictSlider: FC<StartPollProps> = ({
             </button>
           )}
         </div>
+
         <div className="flex items-center mb-4">
           <label
             className="text-[15px] leading-none pr-[15px]"
@@ -508,5 +510,36 @@ export const PredictSlider: FC<StartPollProps> = ({
         )}
       </div>
     </>
+  );
+};
+
+const CustomThumb = ({ middle = false }: { middle?: boolean }) => {
+  return (
+    <Slider.Thumb
+      className={`flex flex-col justify-between focus-visible:outline-none bg-blue-300 w-[2px]  ${
+        middle ? "h-5 mx-4" : "h-12 -translate-y-2"
+      }`}
+    >
+      {/* <div
+        className={`w-2 h-2 mt-px rounded-full bg-black -translate-y-1/2 ${
+          middle ? "opacity-0" : "animate-showCircle"
+        }`}
+      /> */}
+      {/* <div
+        className={`w-0 h-0 mt-px border-solid border-y-[8px] border-l-[13px] border-transparent border-l-black translate-y-1/2 ${
+          middle ? "opacity-0" : "animate-showTriangle"
+        }`}
+      /> */}
+      <div
+        className={`w-2 h-2 rounded-full bg-blue-300 -translate-y-1 -translate-x-[3px] ${
+          middle ? "opacity-0" : ""
+        }`}
+      />
+      <div
+        className={`w-0 h-0 mt-px border-b-8 border-x-8 border-transparent border-solid border-b-blue-300 -translate-x-[7px] ${
+          middle ? "opacity-0" : ""
+        }`}
+      />
+    </Slider.Thumb>
   );
 };

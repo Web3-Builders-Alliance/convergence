@@ -36,7 +36,7 @@ export const RequestAirdrop: FC = () => {
       );
 
       // Get the lates block hash to use on our transaction and confirmation
-      let latestBlockhash = await connection.getLatestBlockhash();
+      let latestBlockhash = await publicConnection.getLatestBlockhash();
       await connection.confirmTransaction(
         { signature, ...latestBlockhash },
         "confirmed"
