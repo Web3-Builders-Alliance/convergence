@@ -49,9 +49,9 @@ export default function Profile() {
   ]);
 
   let categories = {
-    "Own Polls": onwPolls,
-    "Live Polls": livePolls,
     "Past Polls": pastPolls,
+    "Live Polls": livePolls,
+    "Own Polls": onwPolls,
   };
 
   return (
