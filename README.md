@@ -6,7 +6,7 @@ Convergence is a collaborative platform designed to harness the collective wisdo
 
 ## Features
 
-- **Prediction Polls:** Users can participate in prediction polls by making their own predictions for future events.
+- **Prediction Polls:** Users can create or participate in prediction polls by making their own predictions for future events.
 - **Scoring System:** The platform tracks users' prediction accuracy over time and assigns scores, giving higher weight to those with a proven track record.
 
 
